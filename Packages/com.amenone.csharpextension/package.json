@@ -1,0 +1,10 @@
+{
+  "name": "com.amenone.csharpextension",
+  "displayName": "AmenoneC#Extension",
+  "version": "0.1.2",
+  "unity": "2022.3",
+  "description": "C#Extension.",
+  "author": {
+    "name": "amenonegames"
+  }
+}

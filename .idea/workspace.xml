@@ -5,8 +5,48 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a5371449-1fda-4d9f-889c-3ae7eb323ffb" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/Assets/UniversalRenderPipelineGlobalSettings.asset" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/UniversalRenderPipelineGlobalSettings.asset.meta" beforeDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/com.amenone.csharpextension/Scripts/ArrayExtensions.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/com.amenone.csharpextension/Scripts/ArrayExtensions.cs.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/com.amenone.csharpextension/Scripts/EnumExtension.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/com.amenone.csharpextension/Scripts/EnumExtension.cs.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/com.amenone.csharpextension/Scripts/IntExtensions.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/com.amenone.csharpextension/Scripts/IntExtensions.cs.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/com.amenone.csharpextension/Scripts/IsExternalInit.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/com.amenone.csharpextension/Scripts/IsExternalInit.cs.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/com.amenone.csharpextension/Scripts/LINQExtensions.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/com.amenone.csharpextension/Scripts/LINQExtensions.cs.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/com.amenone.csharpextension/Scripts/ListExtensions.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/com.amenone.csharpextension/Scripts/ListExtensions.cs.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/com.amenone.csharpextension/Scripts/PooledArray.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/com.amenone.csharpextension/Scripts/PooledArray.cs.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/com.amenone.csharpextension/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/com.amenone.unityextension.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/com.amenone.unityextension/Scripts.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/com.amenone.unityextension/Scripts/AnimationCurveExtensions.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/com.amenone.unityextension/Scripts/AnimationCurveExtensions.cs.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/com.amenone.unityextension/Scripts/ColorExtention.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/com.amenone.unityextension/Scripts/ColorExtention.cs.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/com.amenone.unityextension/Scripts/Extensions.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/com.amenone.unityextension/Scripts/Extensions.cs.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/com.amenone.unityextension/Scripts/GameObjectExtensions.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/com.amenone.unityextension/Scripts/GameObjectExtensions.cs.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/com.amenone.unityextension/Scripts/MonobehaviourExtensions.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/com.amenone.unityextension/Scripts/MonobehaviourExtensions.cs.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/com.amenone.unityextension/Scripts/VectorExtension.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/com.amenone.unityextension/Scripts/VectorExtension.cs.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/com.amenone.unityextension/Scripts/VectorExtensions.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/com.amenone.unityextension/Scripts/VectorExtensions.cs.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/com.amenone.unityextension/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/com.amenone.unityextension/package.json.meta" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/projectSettingsUpdater.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/projectSettingsUpdater.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Packages/com.amenone.vcontainerextensions/Scripts/amenone.VcontainerViewextEnsions.asmdef" beforeDir="false" afterPath="$PROJECT_DIR$/Packages/com.amenone.vcontainerextensions/Scripts/amenone.VcontainerViewextExtensions.asmdef" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Packages/com.amenone.vcontainerextensions/Scripts/amenone.VcontainerViewextEnsions.asmdef.meta" beforeDir="false" afterPath="$PROJECT_DIR$/Packages/com.amenone.vcontainerextensions/Scripts/amenone.VcontainerViewextExtensions.asmdef.meta" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Packages/manifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/Packages/manifest.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Packages/packages-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/Packages/packages-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ProjectSettings/EditorBuildSettings.asset" beforeDir="false" afterPath="$PROJECT_DIR$/ProjectSettings/EditorBuildSettings.asset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ProjectSettings/ProjectVersion.txt" beforeDir="false" afterPath="$PROJECT_DIR$/ProjectSettings/ProjectVersion.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ProjectSettings/ShaderGraphSettings.asset" beforeDir="false" afterPath="$PROJECT_DIR$/ProjectSettings/ShaderGraphSettings.asset" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -16,45 +56,60 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
-  "lastFilter": {
-    "state": "OPEN",
-    "assignee": "amenonegames"
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;amenonegames&quot;
   }
-}]]></component>
+}</component>
   <component name="GithubPullRequestsUISettings"><![CDATA[{
   "selectedUrlAndAccountId": {
-    "url": "https://github.com/amenonegames/VContainerExtensions.git",
+    "url": "git@github.com:amenonegames/VContainerExtensions.git",
     "accountId": "3b4a061c-e397-4413-8e32-09a5b3d0a242"
   }
 }]]></component>
   <component name="HighlightingSettingsPerFile">
-    <setting file="file://$PROJECT_DIR$/Packages/com.amenone.vcontainerextensions/Scripts/Lookups/NameableLookupSingleWithNullObjBase.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Assets/com.amenone.csharpextension/Scripts/ArrayExtensions.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Assets/com.amenone.csharpextension/Scripts/EnumExtension.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Assets/com.amenone.csharpextension/Scripts/IntExtensions.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Assets/com.amenone.csharpextension/Scripts/IsExternalInit.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Assets/com.amenone.csharpextension/Scripts/LINQExtensions.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Assets/com.amenone.csharpextension/Scripts/ListExtensions.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Assets/com.amenone.csharpextension/Scripts/PooledArray.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Assets/com.amenone.unityextension/Scripts/Extensions.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Assets/com.amenone.unityextension/Scripts/GameObjectExtensions.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Assets/com.amenone.unityextension/Scripts/MonobehaviourExtensions.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Assets/com.amenone.unityextension/Scripts/VectorExtension.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Assets/com.amenone.unityextension/Scripts/VectorExtensions.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Packages/com.amenone.vcontainerextensions/AdditionalUtils/ContainerBuilderUnityAdditionalExtensions.cs" root0="SKIP_HIGHLIGHTING" />
   </component>
   <component name="MetaFilesCheckinStateConfiguration" checkMetaFiles="true" />
-  <component name="ProjectColorInfo"><![CDATA[{
-  "associatedIndex": 8
-}]]></component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 8
+}</component>
   <component name="ProjectId" id="2qhOwtCHmy3wLAyuSaFIi4W7Ok4" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
   <component name="ProjectViewState">
     <option name="autoscrollFromSource" value="true" />
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "main",
-    "last_opened_file_path": "C:/Users/tamed/Documents/projects/VContainerExtensions",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/tamed/Documents/projects/VContainerExtensions&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
@@ -64,6 +119,7 @@
       <option name="presentableId" value="Default" />
       <updated>1735111581808</updated>
       <workItem from="1735111582978" duration="307000" />
+      <workItem from="1763459509691" duration="1791000" />
     </task>
     <task id="LOCAL-00001" summary="updateしてunityで開ける状態に">
       <option name="closed" value="true" />
@@ -99,5 +155,23 @@
     <option name="CLEAR_INITIAL_COMMIT_MESSAGE" value="true" />
     <MESSAGE value="updateしてunityで開ける状態に" />
     <option name="LAST_COMMIT_MESSAGE" value="updateしてunityで開ける状態に" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <breakpoint enabled="true" type="DotNet_Exception_Breakpoints">
+          <properties exception="System.OperationCanceledException" breakIfHandledByOtherCode="false" displayValue="System.OperationCanceledException" />
+          <option name="timeStamp" value="1" />
+        </breakpoint>
+        <breakpoint enabled="true" type="DotNet_Exception_Breakpoints">
+          <properties exception="System.Threading.Tasks.TaskCanceledException" breakIfHandledByOtherCode="false" displayValue="System.Threading.Tasks.TaskCanceledException" />
+          <option name="timeStamp" value="2" />
+        </breakpoint>
+        <breakpoint enabled="true" type="DotNet_Exception_Breakpoints">
+          <properties exception="System.Threading.ThreadAbortException" breakIfHandledByOtherCode="false" displayValue="System.Threading.ThreadAbortException" />
+          <option name="timeStamp" value="3" />
+        </breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
 </project>
