@@ -9,23 +9,22 @@ namespace amenone.VcontainerExtensions.Lookups
 {
     public abstract class
         ListNameableLookupSingleBase<TKeyInList,  TValue > : IViewLookupSingleInstanceFromList<TKeyInList, TValue >
-        where TValue : IListNameable<TKeyInList> 
+        where TValue : IListNameable<TKeyInList>
     {
-        protected Dictionary<IEnumerable<TKeyInList>, TValue> _dictionary { get; }
-        private List<TKeyInList> _AllKeys { get; }
-        
+        protected Dictionary<IEnumerable<TKeyInList>, TValue> _dictionary { get; set; }
+        private List<TKeyInList> _AllKeys { get; set; }
+
         [Inject]
         protected ListNameableLookupSingleBase(IRegisterMarkerStorage list)
         {
             _dictionary = list.RegisterMarkers
                 .OfType<TValue>()
                 .ToDictionary(x => x.Names);
-            
+
             _AllKeys = new List<TKeyInList>();
             foreach (var key in _dictionary.Select(x => x.Key)) _AllKeys.AddRange(key);
         }
 
-        
         public IEnumerable<TValue> Get(TKeyInList name)
         {
             IEnumerable<KeyValuePair<IEnumerable<TKeyInList>,TValue>> result =  _dictionary.Where(x => x.Key.Contains(name));
@@ -69,5 +68,12 @@ namespace amenone.VcontainerExtensions.Lookups
             return _AllKeys.Contains(name);
         }
 
+        public void Dispose()
+        {
+            _dictionary.Clear();
+            _AllKeys.Clear();
+            _dictionary = null;
+            _AllKeys = null;
+        }
     }
 }

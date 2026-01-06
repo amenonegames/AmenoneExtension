@@ -14,5 +14,10 @@ namespace amenone.VcontainerExtensions.Lookups.Storage
         {
             _registerMarkers = registerMarkers.ToArray();
         }
+
+        public void Dispose()
+        {
+            _registerMarkers = null;
+        }
     }
 }

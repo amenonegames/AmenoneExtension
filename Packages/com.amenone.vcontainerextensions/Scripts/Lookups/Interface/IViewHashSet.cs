@@ -1,8 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace amenone.VcontainerExtensions.Lookups.Interface
 {
-    public interface IViewHashSet<T>
+    public interface IViewHashSet<T> : IDisposable
     {
         IEnumerable<T> GetAll();
     }

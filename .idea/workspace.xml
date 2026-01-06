@@ -5,47 +5,18 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a5371449-1fda-4d9f-889c-3ae7eb323ffb" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/Assets/com.amenone.csharpextension/Scripts/ArrayExtensions.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/com.amenone.csharpextension/Scripts/ArrayExtensions.cs.meta" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/com.amenone.csharpextension/Scripts/EnumExtension.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/com.amenone.csharpextension/Scripts/EnumExtension.cs.meta" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/com.amenone.csharpextension/Scripts/IntExtensions.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/com.amenone.csharpextension/Scripts/IntExtensions.cs.meta" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/com.amenone.csharpextension/Scripts/IsExternalInit.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/com.amenone.csharpextension/Scripts/IsExternalInit.cs.meta" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/com.amenone.csharpextension/Scripts/LINQExtensions.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/com.amenone.csharpextension/Scripts/LINQExtensions.cs.meta" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/com.amenone.csharpextension/Scripts/ListExtensions.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/com.amenone.csharpextension/Scripts/ListExtensions.cs.meta" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/com.amenone.csharpextension/Scripts/PooledArray.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/com.amenone.csharpextension/Scripts/PooledArray.cs.meta" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/com.amenone.csharpextension/package.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/com.amenone.unityextension.meta" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/com.amenone.unityextension/Scripts.meta" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/com.amenone.unityextension/Scripts/AnimationCurveExtensions.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/com.amenone.unityextension/Scripts/AnimationCurveExtensions.cs.meta" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/com.amenone.unityextension/Scripts/ColorExtention.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/com.amenone.unityextension/Scripts/ColorExtention.cs.meta" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/com.amenone.unityextension/Scripts/Extensions.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/com.amenone.unityextension/Scripts/Extensions.cs.meta" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/com.amenone.unityextension/Scripts/GameObjectExtensions.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/com.amenone.unityextension/Scripts/GameObjectExtensions.cs.meta" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/com.amenone.unityextension/Scripts/MonobehaviourExtensions.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/com.amenone.unityextension/Scripts/MonobehaviourExtensions.cs.meta" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/com.amenone.unityextension/Scripts/VectorExtension.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/com.amenone.unityextension/Scripts/VectorExtension.cs.meta" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/com.amenone.unityextension/Scripts/VectorExtensions.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/com.amenone.unityextension/Scripts/VectorExtensions.cs.meta" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/com.amenone.unityextension/package.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Assets/com.amenone.unityextension/package.json.meta" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/projectSettingsUpdater.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/projectSettingsUpdater.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/com.amenone.vcontainerextensions/Scripts/amenone.VcontainerViewextEnsions.asmdef" beforeDir="false" afterPath="$PROJECT_DIR$/Packages/com.amenone.vcontainerextensions/Scripts/amenone.VcontainerViewextExtensions.asmdef" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/com.amenone.vcontainerextensions/Scripts/amenone.VcontainerViewextEnsions.asmdef.meta" beforeDir="false" afterPath="$PROJECT_DIR$/Packages/com.amenone.vcontainerextensions/Scripts/amenone.VcontainerViewextExtensions.asmdef.meta" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/manifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/Packages/manifest.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/packages-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/Packages/packages-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ProjectSettings/EditorBuildSettings.asset" beforeDir="false" afterPath="$PROJECT_DIR$/ProjectSettings/EditorBuildSettings.asset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ProjectSettings/ProjectVersion.txt" beforeDir="false" afterPath="$PROJECT_DIR$/ProjectSettings/ProjectVersion.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Packages/com.amenone.vcontainerextensions/Scripts/Lookups/Base/ListNameableLookupEnumerableBase.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Packages/com.amenone.vcontainerextensions/Scripts/Lookups/Base/ListNameableLookupEnumerableBase.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Packages/com.amenone.vcontainerextensions/Scripts/Lookups/Base/ListNameableLookupSingleBase.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Packages/com.amenone.vcontainerextensions/Scripts/Lookups/Base/ListNameableLookupSingleBase.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Packages/com.amenone.vcontainerextensions/Scripts/Lookups/Base/NameableInterfaceLookupBase.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Packages/com.amenone.vcontainerextensions/Scripts/Lookups/Base/NameableInterfaceLookupBase.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Packages/com.amenone.vcontainerextensions/Scripts/Lookups/Base/NameableLookupEnumerableBase.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Packages/com.amenone.vcontainerextensions/Scripts/Lookups/Base/NameableLookupEnumerableBase.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Packages/com.amenone.vcontainerextensions/Scripts/Lookups/Base/NameableLookupSingleBase.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Packages/com.amenone.vcontainerextensions/Scripts/Lookups/Base/NameableLookupSingleBase.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Packages/com.amenone.vcontainerextensions/Scripts/Lookups/Base/NameableLookupSingleWithNullObjBase.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Packages/com.amenone.vcontainerextensions/Scripts/Lookups/Base/NameableLookupSingleWithNullObjBase.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Packages/com.amenone.vcontainerextensions/Scripts/Lookups/Interface/IViewHashSet.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Packages/com.amenone.vcontainerextensions/Scripts/Lookups/Interface/IViewHashSet.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Packages/com.amenone.vcontainerextensions/Scripts/Lookups/Interface/IViewLookupEnumerable.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Packages/com.amenone.vcontainerextensions/Scripts/Lookups/Interface/IViewLookupEnumerable.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Packages/com.amenone.vcontainerextensions/Scripts/Lookups/Interface/IViewLookupSingle.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Packages/com.amenone.vcontainerextensions/Scripts/Lookups/Interface/IViewLookupSingle.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Packages/com.amenone.vcontainerextensions/Scripts/Lookups/Storage/IRegisterMakerStorage.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Packages/com.amenone.vcontainerextensions/Scripts/Lookups/Storage/IRegisterMakerStorage.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Packages/com.amenone.vcontainerextensions/Scripts/Lookups/Storage/RegisterMarkerStorage.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Packages/com.amenone.vcontainerextensions/Scripts/Lookups/Storage/RegisterMarkerStorage.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/ProjectSettings/ShaderGraphSettings.asset" beforeDir="false" afterPath="$PROJECT_DIR$/ProjectSettings/ShaderGraphSettings.asset" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -64,24 +35,20 @@
 }</component>
   <component name="GithubPullRequestsUISettings"><![CDATA[{
   "selectedUrlAndAccountId": {
-    "url": "git@github.com:amenonegames/VContainerExtensions.git",
+    "url": "git@github.com:amenonegames/AmenoneExtension.git",
     "accountId": "3b4a061c-e397-4413-8e32-09a5b3d0a242"
   }
 }]]></component>
   <component name="HighlightingSettingsPerFile">
-    <setting file="file://$PROJECT_DIR$/Assets/com.amenone.csharpextension/Scripts/ArrayExtensions.cs" root0="SKIP_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/Assets/com.amenone.csharpextension/Scripts/EnumExtension.cs" root0="SKIP_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/Assets/com.amenone.csharpextension/Scripts/IntExtensions.cs" root0="SKIP_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/Assets/com.amenone.csharpextension/Scripts/IsExternalInit.cs" root0="SKIP_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/Assets/com.amenone.csharpextension/Scripts/LINQExtensions.cs" root0="SKIP_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/Assets/com.amenone.csharpextension/Scripts/ListExtensions.cs" root0="SKIP_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/Assets/com.amenone.csharpextension/Scripts/PooledArray.cs" root0="SKIP_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/Assets/com.amenone.unityextension/Scripts/Extensions.cs" root0="SKIP_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/Assets/com.amenone.unityextension/Scripts/GameObjectExtensions.cs" root0="SKIP_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/Assets/com.amenone.unityextension/Scripts/MonobehaviourExtensions.cs" root0="SKIP_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/Assets/com.amenone.unityextension/Scripts/VectorExtension.cs" root0="SKIP_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/Assets/com.amenone.unityextension/Scripts/VectorExtensions.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Packages/com.amenone.unityextension/Scripts/AnimationCurveExtensions.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Packages/com.amenone.vcontainerextensions/AdditionalUtils/ContainerBuilderUnityAdditionalExtensions.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Packages/com.amenone.vcontainerextensions/Scripts/Lookups/Base/ListNameableLookupEnumerableBase.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Packages/com.amenone.vcontainerextensions/Scripts/Lookups/Interface/IViewHashSet.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Packages/com.amenone.vcontainerextensions/Scripts/Lookups/Interface/IViewLookupEnumerable.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Packages/com.amenone.vcontainerextensions/Scripts/Lookups/Interface/IViewLookupSingle.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Packages/com.amenone.vcontainerextensions/Scripts/Lookups/Storage/IRegisterMakerStorage.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Packages/com.amenone.vcontainerextensions/Scripts/Lookups/Storage/RegisterMarkerStorage.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Packages/com.amenone.vcontainerextensions/Scripts/Utils/LifetimeScopeExtensions.cs" root0="SKIP_HIGHLIGHTING" />
   </component>
   <component name="MetaFilesCheckinStateConfiguration" checkMetaFiles="true" />
   <component name="ProjectColorInfo">{
@@ -96,20 +63,22 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/tamed/Documents/projects/VContainerExtensions&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "git-widget-placeholder": "main",
+    "last_opened_file_path": "C:/Users/tamed/Documents/projects/VContainerExtensions",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
@@ -120,6 +89,7 @@
       <updated>1735111581808</updated>
       <workItem from="1735111582978" duration="307000" />
       <workItem from="1763459509691" duration="1791000" />
+      <workItem from="1767669996288" duration="651000" />
     </task>
     <task id="LOCAL-00001" summary="updateしてunityで開ける状態に">
       <option name="closed" value="true" />
@@ -129,7 +99,15 @@
       <option name="project" value="LOCAL" />
       <updated>1735111825109</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="change project ver">
+      <option name="closed" value="true" />
+      <created>1767670222868</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1767670222868</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -154,7 +132,8 @@
   <component name="VcsManagerConfiguration">
     <option name="CLEAR_INITIAL_COMMIT_MESSAGE" value="true" />
     <MESSAGE value="updateしてunityで開ける状態に" />
-    <option name="LAST_COMMIT_MESSAGE" value="updateしてunityで開ける状態に" />
+    <MESSAGE value="change project ver" />
+    <option name="LAST_COMMIT_MESSAGE" value="change project ver" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

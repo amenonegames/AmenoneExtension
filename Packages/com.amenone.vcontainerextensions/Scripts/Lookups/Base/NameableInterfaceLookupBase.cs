@@ -16,11 +16,17 @@ namespace amenone.VcontainerExtensions.Lookups
                 .ToHashSet();
         }
 
-        private HashSet<T> _hash { get; }
+        private HashSet<T> _hash { get; set; }
 
         public IEnumerable<T> GetAll()
         {
             return _hash;
+        }
+
+        public void Dispose()
+        {
+            _hash.Clear();
+            _hash = null;
         }
     }
 }

@@ -21,7 +21,7 @@ namespace amenone.VcontainerExtensions.Lookups
                 .ToDictionary(x => x.Name);
         }
 
-        protected Dictionary<TKey, TValue> _dictionary { get; }
+        protected Dictionary<TKey, TValue> _dictionary { get; set; }
 
         public TValue Get(TKey name)
         {
@@ -67,6 +67,12 @@ namespace amenone.VcontainerExtensions.Lookups
         public void Add(TKey key, TValue value)
         {
             _dictionary.Add(key, value);
+        }
+
+        public void Dispose()
+        {
+            _dictionary.Clear();
+            _dictionary = null;
         }
     }
 }

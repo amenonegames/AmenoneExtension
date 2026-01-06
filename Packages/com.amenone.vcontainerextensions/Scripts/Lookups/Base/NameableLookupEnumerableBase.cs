@@ -15,28 +15,28 @@ namespace amenone.VcontainerExtensions.Lookups
         [Inject]
         protected NameableLookupEnumerableBase(IRegisterMarkerStorage list)
         {
-            _Lookup = (Lookup<TKey, TValue>)list.RegisterMarkers
+            _lookup = (Lookup<TKey, TValue>)list.RegisterMarkers
                 .OfType<TValue>()
                 .ToLookup(x => x.Name);
         }
 
-        private Lookup<TKey, TValue> _Lookup { get; }
+        private Lookup<TKey, TValue> _lookup { get; set; }
 
         public IEnumerable<TValue> Get(TKey name)
         {
-            return name == null ? null : _Lookup[name];
+            return name == null ? null : _lookup[name];
         }
 
         public IEnumerable<TValue> GetAll()
         {
-            return _Lookup.SelectMany(x => x);
+            return _lookup.SelectMany(x => x);
         }
 
         public IEnumerable<TValue> GetExcept(TKey name)
         {
             List<TValue> except = new();
 
-            foreach (var keyValue in _Lookup)
+            foreach (var keyValue in _lookup)
             {
                 if (keyValue.Key.Equals(name)) continue;
                 except.AddRange(keyValue);
@@ -50,11 +50,16 @@ namespace amenone.VcontainerExtensions.Lookups
             List<TValue> except = new();
             IEnumerable<TValue> match = null;
 
-            foreach (var keyValue in _Lookup)
+            foreach (var keyValue in _lookup)
                 if (keyValue.Key.Equals(name)) match = keyValue;
                 else except.AddRange(keyValue);
 
             return (match, except);
+        }
+
+        public void Dispose()
+        {
+            _lookup = null;
         }
     }
 }
