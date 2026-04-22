@@ -21,7 +21,7 @@ namespace amenone.VcontainerExtensions.Utils
 
             if( asSelf )
                 registrationBuilder.AsSelf();
-            
+
             if (asImplementedInterfaces)
                 registrationBuilder.AsImplementedInterfaces();
 
@@ -37,10 +37,10 @@ namespace amenone.VcontainerExtensions.Utils
 
             RegistrationBuilder registrationBuilder;
             registrationBuilder = builder.RegisterComponentWithoutSelf(component);
-            
+
             if(asSelf)
                 registrationBuilder.AsSelf();
-            
+
             if (asImplementedInterfaces)
                 registrationBuilder.AsImplementedInterfaces();
 
