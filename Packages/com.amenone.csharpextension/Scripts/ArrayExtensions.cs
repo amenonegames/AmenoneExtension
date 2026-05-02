@@ -1,4 +1,7 @@
-﻿namespace Data.Utils
+﻿using System;
+using System.Linq;
+
+namespace Data.Utils
 {
     public static class ArrayExtensions
     {
@@ -23,5 +26,8 @@
             value = array[index];
             return true;
         }
+
+        public static bool ContainsOrdinalIgnoreCase(this string[] markup, string supposedTag) => markup.Any(m => m.Equals(supposedTag, StringComparison.OrdinalIgnoreCase));
+
     }
 }
