@@ -1,7 +1,7 @@
 ﻿using VContainer;
 using VContainer.Unity;
 
-namespace amenone.VcontainerViewExtensions.AdditionalUtils
+namespace Amenone.VcontainerExtensions.AdditionalUtils
 {
     public static class ContainerBuilderUnityAdditionalExtensions
     {

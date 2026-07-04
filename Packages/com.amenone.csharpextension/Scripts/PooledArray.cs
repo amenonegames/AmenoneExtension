@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Buffers;
 
-namespace LogicGeneral.Utils
+namespace Amenone.CSharpExtension
 {
     public ref struct PooledArray<T>
     {

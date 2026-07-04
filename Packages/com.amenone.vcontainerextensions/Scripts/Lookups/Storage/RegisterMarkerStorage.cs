@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using amenone.VcontainerExtensions.Identifier;
+using Amenone.VcontainerExtensions.Identifier;
 
-namespace amenone.VcontainerExtensions.Lookups.Storage
+namespace Amenone.VcontainerExtensions.Lookups.Storage
 {
     public class RegisterMarkerStorage : IRegisterMarkerStorage
     {

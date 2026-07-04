@@ -1,7 +1,7 @@
-﻿using amenone.VcontainerExtensions.Identifier;
+﻿using Amenone.VcontainerExtensions.Identifier;
 using UnityEngine;
 
-namespace amenone.VcontainerExtensions.Utils
+namespace Amenone.VcontainerExtensions.Sample
 {
     public class Bar : MonoBehaviour , IBar , IRegisterMarker
     {

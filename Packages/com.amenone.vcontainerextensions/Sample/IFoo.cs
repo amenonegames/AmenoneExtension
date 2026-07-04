@@ -1,6 +1,6 @@
 ﻿using NullObjectGenerator;
 
-namespace amenone.VcontainerExtensions.Utils
+namespace Amenone.VcontainerExtensions.Sample
 {
     [InterfaceToNullObj]
     public interface IFoo

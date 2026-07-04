@@ -1,7 +1,7 @@
 ﻿using TMPro;
 using UnityEngine;
 
-namespace DefaultNamespace
+namespace Amenone.UnityExtension
 {
     public static class TMPExtension
     {

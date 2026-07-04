@@ -1,7 +1,6 @@
-﻿using Data.Utils;
-using UnityEngine;
+﻿using UnityEngine;
 
-namespace ViewRoot.Utils
+namespace Amenone.UnityExtension
 {
     public static class AnimationCurveExtensions
     {

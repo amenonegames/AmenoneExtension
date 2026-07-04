@@ -1,6 +1,6 @@
 {
     "name": "amenone.VContainerExtensionsSample",
-    "rootNamespace": "",
+    "rootNamespace": "Amenone.VcontainerExtensions.Sample",
     "references": [
         "GUID:7142d0e5fd746f244aa4751fd21dccef",
         "GUID:b0214a6008ed146ff8f122a6a9c2f6cc"

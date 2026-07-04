@@ -4,21 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a5371449-1fda-4d9f-889c-3ae7eb323ffb" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/com.amenone.vcontainerextensions/Scripts/Lookups/Base/ListNameableLookupEnumerableBase.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Packages/com.amenone.vcontainerextensions/Scripts/Lookups/Base/ListNameableLookupEnumerableBase.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/com.amenone.vcontainerextensions/Scripts/Lookups/Base/ListNameableLookupSingleBase.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Packages/com.amenone.vcontainerextensions/Scripts/Lookups/Base/ListNameableLookupSingleBase.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/com.amenone.vcontainerextensions/Scripts/Lookups/Base/NameableInterfaceLookupBase.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Packages/com.amenone.vcontainerextensions/Scripts/Lookups/Base/NameableInterfaceLookupBase.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/com.amenone.vcontainerextensions/Scripts/Lookups/Base/NameableLookupEnumerableBase.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Packages/com.amenone.vcontainerextensions/Scripts/Lookups/Base/NameableLookupEnumerableBase.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/com.amenone.vcontainerextensions/Scripts/Lookups/Base/NameableLookupSingleBase.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Packages/com.amenone.vcontainerextensions/Scripts/Lookups/Base/NameableLookupSingleBase.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/com.amenone.vcontainerextensions/Scripts/Lookups/Base/NameableLookupSingleWithNullObjBase.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Packages/com.amenone.vcontainerextensions/Scripts/Lookups/Base/NameableLookupSingleWithNullObjBase.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/com.amenone.vcontainerextensions/Scripts/Lookups/Interface/IViewHashSet.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Packages/com.amenone.vcontainerextensions/Scripts/Lookups/Interface/IViewHashSet.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/com.amenone.vcontainerextensions/Scripts/Lookups/Interface/IViewLookupEnumerable.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Packages/com.amenone.vcontainerextensions/Scripts/Lookups/Interface/IViewLookupEnumerable.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/com.amenone.vcontainerextensions/Scripts/Lookups/Interface/IViewLookupSingle.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Packages/com.amenone.vcontainerextensions/Scripts/Lookups/Interface/IViewLookupSingle.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/com.amenone.vcontainerextensions/Scripts/Lookups/Storage/IRegisterMakerStorage.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Packages/com.amenone.vcontainerextensions/Scripts/Lookups/Storage/IRegisterMakerStorage.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/com.amenone.vcontainerextensions/Scripts/Lookups/Storage/RegisterMarkerStorage.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Packages/com.amenone.vcontainerextensions/Scripts/Lookups/Storage/RegisterMarkerStorage.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ProjectSettings/ShaderGraphSettings.asset" beforeDir="false" afterPath="$PROJECT_DIR$/ProjectSettings/ShaderGraphSettings.asset" afterDir="false" />
-    </list>
+    <list default="true" id="a5371449-1fda-4d9f-889c-3ae7eb323ffb" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -89,7 +75,7 @@
       <updated>1735111581808</updated>
       <workItem from="1735111582978" duration="307000" />
       <workItem from="1763459509691" duration="1791000" />
-      <workItem from="1767669996288" duration="651000" />
+      <workItem from="1767669996288" duration="912000" />
     </task>
     <task id="LOCAL-00001" summary="updateしてunityで開ける状態に">
       <option name="closed" value="true" />

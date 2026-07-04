@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace amenone.VcontainerExtensions.Lookups.Interface
+namespace Amenone.VcontainerExtensions.Lookups.Interface
 {
     public interface IViewLookupEnumerable<TKey, TValue> : IDisposable
     {

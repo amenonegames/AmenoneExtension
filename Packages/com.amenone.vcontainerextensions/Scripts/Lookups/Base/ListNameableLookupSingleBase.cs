@@ -1,11 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using amenone.VcontainerExtensions.Identifier;
-using amenone.VcontainerExtensions.Lookups.Interface;
-using amenone.VcontainerExtensions.Lookups.Storage;
+using Amenone.VcontainerExtensions.Identifier;
+using Amenone.VcontainerExtensions.Lookups.Interface;
+using Amenone.VcontainerExtensions.Lookups.Storage;
 using VContainer;
 
-namespace amenone.VcontainerExtensions.Lookups
+namespace Amenone.VcontainerExtensions.Lookups
 {
     public abstract class
         ListNameableLookupSingleBase<TKeyInList,  TValue > : IViewLookupSingleInstanceFromList<TKeyInList, TValue >

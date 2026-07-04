@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Data.Utils
+namespace Amenone.CSharpExtension
 {
     public static class EnumExtension
     {

@@ -1,3 +1,4 @@
 {
-	"name": "amenone.csharpextension"
+	"name": "amenone.csharpextension",
+	"rootNamespace": "Amenone.CSharpExtension"
 }

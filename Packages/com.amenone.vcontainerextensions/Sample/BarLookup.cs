@@ -1,7 +1,7 @@
-﻿using amenone.VcontainerExtensions.Lookups;
-using amenone.VcontainerExtensions.Lookups.Storage;
+﻿using Amenone.VcontainerExtensions.Lookups;
+using Amenone.VcontainerExtensions.Lookups.Storage;
 
-namespace amenone.VcontainerExtensions.Utils
+namespace Amenone.VcontainerExtensions.Sample
 {
     public class BarLookup : NameableLookupEnumerableBase<string,IBar>
     {

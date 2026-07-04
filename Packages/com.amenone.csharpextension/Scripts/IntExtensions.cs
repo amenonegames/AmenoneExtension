@@ -1,4 +1,4 @@
-﻿namespace Data.Utils
+﻿namespace Amenone.CSharpExtension
 {
     public static class IntExtensions
     {

@@ -1,7 +1,7 @@
 ﻿using System;
-using amenone.VcontainerExtensions.Identifier;
+using Amenone.VcontainerExtensions.Identifier;
 
-namespace amenone.VcontainerExtensions.Lookups.Storage
+namespace Amenone.VcontainerExtensions.Lookups.Storage
 {
     public interface IRegisterMarkerStorage : IDisposable
     {

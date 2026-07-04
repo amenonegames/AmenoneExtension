@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace amenone.VcontainerExtensions.Identifier
+namespace Amenone.VcontainerExtensions.Identifier
 {
     public interface IListNameable<T> 
     {

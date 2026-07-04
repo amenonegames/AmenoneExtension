@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace Data.Utils
+namespace Amenone.UnityExtension
 {
     public static class ColorExtention
     {
