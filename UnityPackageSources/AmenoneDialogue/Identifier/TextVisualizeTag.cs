@@ -1,0 +1,32 @@
+﻿namespace Identifier
+{
+    public enum TextVisualizeTag
+    {
+        Default,
+        Clockwork,
+        SlideL2R,
+        FlowerEase,
+        Fall,
+        FallStepped,
+        Twist,
+        Divided,
+        HeatMap,
+        Glitch,
+        Defocus,
+        Ripple,
+        Melt,
+        Flicker,
+        Halftone,
+        Sticky,
+        Echo,
+        Scramble,
+        Scatter,
+        Prism,
+        Wisp,
+        Tangle,
+        Oversize,
+        Squiggle,
+        Pixel,
+        Stretch,
+    }
+}

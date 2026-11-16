@@ -1,0 +1,3 @@
+# The files under UnityPackageSources are packed into a .unitypackage byte for byte.
+# Keep git from converting their line endings so every checkout builds the same package.
+UnityPackageSources/** -text

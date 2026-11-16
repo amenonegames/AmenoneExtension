@@ -1,0 +1,347 @@
+# Amenone Dialogue System
+
+版: 2.0.0（`package-version.txt`）。変更の記録は `CHANGELOG.md`。
+
+## 1. これは何か
+
+[Yarn Spinner](https://www.yarnspinner.dev/) の `Yarn.Dialogue`（台本の VM）を土台にした、Unity 向けの対話ライブラリ。台詞・選択肢・命令の進行を状態機械で回し、TextMeshPro の台詞を 1 文字ずつ演出つきで出す。組み立ては VContainer、層の間の通知は MessagePipe。
+
+層ごとに asmdef が分かれている。
+
+| フォルダ | asmdef | 役割 |
+|---|---|---|
+| `Identifier/` | `amenone.dialogue.identifier` | 状態（`DialogueState`）、入力の状態、演出のタグ（`TextVisualizeTag`）の列挙 |
+| `LogicAbstract/` | `amenone.dialogue.logic.abstract` | Logic の口（`IDialogueStartable`、`ICommandStorage`、`IDialogueVariableWriter` ほか）と、層の間で送るメッセージの型 |
+| `Logic/` | `amenone.dialogue.logic` | `Yarn.Dialogue` を持ち、行・選択肢・命令・場面の始まりと終わりをメッセージにして発行する。命令の振り分け（`CommandDispatcher`）、台本の変数、文字の速さ。組み立ては `LogicContainerBuilder` |
+| `ViewAbstract/` | `amenone.dialogue.view.abstract` | 表示に渡すデータ（`LineViewContext`、`OptionViewContext`）と、表示の拡張の口（`LineDisplayExtensions`、`IMarkupCharShowAnimator`） |
+| `View/` | `amenone.dialogue.view` | 台詞の表示（`LineView`、TMP）、文字の演出（`Line/CharShowAnimators/`、約 25 種）、選択肢、送り・早送りのボタン。組み立ては `ViewContainerBuilder` |
+| `Presenter/` | `amenone.dialogue.presenter` | メッセージを購読して状態機械を回す（`DialogueState/`）、待っている入力に合わせてボタンを出し入れする（`Input/`） |
+| `Presenter/Adapters/` | `amenone.dialogue.adapter` / `amenone.dialogue.adapter.abstract` | 行 ID から文を引き（Yarn の言語別の文、または Unity Localization）、タグを 1 文字ごとの印に分けて表示のデータにする |
+| `Presenter/ContainerBuilder/` | `amenone.dialogue.presenterlayer.container` | Presenter の組み立て（`PresenterContainerBuilder`） |
+| `Root/Abstract/` | `amenone.dialogue.rootAbstract` | 対話の寿命の CancellationToken の口（`ITokenGettable`） |
+| `Root/Container/` | `amenone.dialogue.root` | いちばん親の組み立て（`RootContainerBuilder`）。MessagePipe のブローカーの登録（`DialogueMessagingExtensions`）と `LineDisplayExtensions` を置く |
+| `Tests/` | `amenone.dialogue.logic.tests` / `amenone.dialogue.messaging.tests` | EditMode テスト（Editor のみ、`UNITY_INCLUDE_TESTS` の時だけ） |
+
+## 2. 入れ方
+
+1. 先に「3. 依存の一覧」の物を入れる（入れないと、取り込んだ直後にコンパイルが止まる）
+2. `.unitypackage` は https://github.com/amenonegames/AmenoneExtension の Releases に、タグ `dialogue/<版>` で置く（ファイル名 `AmenoneDialogue-<版>.unitypackage`）。取ったファイルを Unity の Assets > Import Package > Custom Package で入れる（バッチモードなら `-importPackage <パス>`）
+3. `Assets/AmenoneDialogue/` に展開される。`.meta` は同梱の物がそのまま使われ、GUID は変わらない
+
+ライブラリは Unity のパッケージ（UPM）ではなく `Assets/` の下のソースとして入る。利用側で書き換えてよい。書き換えた後に新しい版を入れると、書き換えは上書きされるので、どの版から書き換え始めたかを `package-version.txt` で控えておく。
+
+既に同じ GUID のファイルを持つプロジェクト（旧版を `Assets/Scripts/` などに置いているプロジェクト）に入れると、次のようになる。
+
+- 既にあるファイルは、今の場所のまま中身が新しい版に置き換わる
+- 新しい版で増えたファイルも、親のフォルダの GUID をたどって今の場所（例: `Assets/Scripts/Root/Container/DialogueMessagingExtensions.cs`）に置かれる。`Assets/AmenoneDialogue/` に別の木はできない（根のフォルダの GUID が旧版の根のフォルダと同じため）
+- パッケージに無いファイルは消されずに残る（2.0.0 で、旧版からファイル単位で消えた物はソースジェネレータの DLL だけ。これも残る）
+
+上げる時の手順は「7. 旧版からの上げ方」。
+
+## 3. 依存の一覧
+
+### `Packages/manifest.json` に足す物
+
+git の依存はコミットの hash で固定した例（「10. 確かめた構成」の組み合わせ）。
+
+```json
+{
+  "dependencies": {
+    "com.amenone.csharpextension": "https://github.com/amenonegames/AmenoneExtension.git?path=/Packages/com.amenone.csharpextension#1ec3f5553fb72cab03f758bef9a89070fd8e44be",
+    "com.amenone.unityextension": "https://github.com/amenonegames/AmenoneExtension.git?path=/Packages/com.amenone.unityextension#1ec3f5553fb72cab03f758bef9a89070fd8e44be",
+    "com.amenone.vcontainerextensions": "https://github.com/amenonegames/AmenoneExtension.git?path=/Packages/com.amenone.vcontainerextensions#1ec3f5553fb72cab03f758bef9a89070fd8e44be",
+    "com.amenone.litmotiontext": "https://github.com/amenonegames/LitMotionText.git?path=/Assets/LitMotionText#c32ed88afbdc961b5ed1232a6b5020b8cbe2e092",
+    "com.annulusgames.lit-motion": "https://github.com/annulusgames/LitMotion.git?path=src/LitMotion/Assets/LitMotion#422eb124051c81a9bc3f422ebf190703c5053514",
+    "com.annulusgames.u-pools": "https://github.com/AnnulusGames/uPools.git?path=/Assets/uPools#e11ce9c12c65c12f3bc35ae2ef7cacde6826e503",
+    "com.cysharp.messagepipe": "https://github.com/Cysharp/MessagePipe.git?path=src/MessagePipe.Unity/Assets/Plugins/MessagePipe#3adc01deb1a283cb2faeb36c00178b84884a7fc3",
+    "com.cysharp.messagepipe.vcontainer": "https://github.com/Cysharp/MessagePipe.git?path=src/MessagePipe.Unity/Assets/Plugins/MessagePipe.VContainer#3adc01deb1a283cb2faeb36c00178b84884a7fc3",
+    "com.cysharp.unitask": "https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask#f74aace058f4ee7d3aa5bcc89cc98dbfb2a02892",
+    "jp.hadashikick.vcontainer": "1.19.0",
+    "com.unity.inputsystem": "6.7.0",
+    "com.unity.localization": "2.0.0",
+    "com.unity.ugui": "2.7.0",
+    "com.unity.test-framework": "1.9.0"
+  },
+  "scopedRegistries": [
+    {
+      "name": "package.openupm.com",
+      "url": "https://package.openupm.com",
+      "scopes": [
+        "jp.hadashikick.vcontainer"
+      ]
+    }
+  ]
+}
+```
+
+- VContainer は OpenUPM から入れるので、`scopedRegistries` の項目も要る（既にあれば `scopes` に `jp.hadashikick.vcontainer` を足す）
+- `com.unity.addressables` はライブラリが直接参照するが、`com.unity.localization` が連れてくるので、manifest に書かなくてよい
+- `com.unity.test-framework` は、ライブラリの EditMode テストを回す時だけ要る
+
+### NuGet（NuGetForUnity の `Assets/packages.config`）
+
+```xml
+<package id="AutoConstructor" version="5.6.0" manuallyInstalled="true" />
+<package id="FastEnum" version="1.8.0" manuallyInstalled="true" />
+```
+
+### ソースジェネレータ
+
+- `Amenonegames.AutoComponentProperty.dll`（`[CompoProp]`。`LineView` と `OptionViewBase` が使う）: `RoslynAnalyzer` のラベルを付けた `.meta` ごと `Assets/` の下に置く。このパッケージには入れていない。公開の取得元は未確認
+- NullObjectGenerator（`IContinueActivatable` の `[InterfaceToNullObj]`）: `com.amenone.vcontainerextensions` に同梱の `Scripts/DLL/NullObjectGeneratorForNewerThan2022.2.dll` が受ける。追加の作業は要らない
+
+### 自分で用意する物（同梱していない）
+
+| 物 | 置き場所の例 | メモ |
+|---|---|---|
+| Yarn Spinner for Unity（`dev.yarnspinner.unity`） | `Packages/dev.yarnspinner.unity/`（埋め込み） | Asset Store の有償の版。アドオンは要らない |
+| Rotary Heart の SerializableDictionary Pro | `Assets/ExternalPlugins/Rotary Heart/` | Asset Store の有償アセット。`OptionDictionary` と `SerializableDicGameObjPerTextVisualizeTag` が使う |
+
+どちらも再配布できないので、このパッケージに入れていない。
+
+### Scripting Define Symbols
+
+- `FORCE_YARNLOCALIZATION`: 付けると、台詞の文を Yarn のプロジェクトの言語別の文から引く（`YarnLocalizationLineProvider`）。付けないと Unity Localization から引く（`UniyLocalizationLineProvider`）。切り替えは `PresenterContainerBuilder` にある
+- `RH_SerializedDictionaryPro`: ライブラリのコードはこの記号を参照していない（「10. 確かめた構成」では付けていた）
+
+### `csc.rsp`
+
+`LogicAbstract/csc.rsp` と `ViewAbstract/csc.rsp`（`-langVersion:10`）を同梱している。`record struct` を使うため。追加の作業は要らない。
+
+## 4. 組み立て方と落とし穴
+
+シーンや prefab の見本は、この版には同梱していない。
+
+### 最小の組み立て
+
+1. 4 つの GameObject に、`RootContainerBuilder`、`LogicContainerBuilder`、`ViewContainerBuilder`、`PresenterContainerBuilder` を 1 つずつ付ける（どれも VContainer の `LifetimeScope`）
+2. 親子の順は Root → Logic → View → Presenter。各 `LifetimeScope` の Inspector の Parent（VContainer の `parentReference`）に、1 つ上の型を選ぶ（Logic の親は `RootContainerBuilder`、View の親は `LogicContainerBuilder`、Presenter の親は `ViewContainerBuilder`）。ゲームの `LifetimeScope` を Root の親に置いてもよい（「5. MessagePipe の登録」）
+3. 下の表の「必ず割り当てる」物を割り当てる
+4. `LogicContainerBuilder` の `startsAutomatically` が付いていれば、組み立てが終わった時に `START` の場面から始まる
+
+| ContainerBuilder | 必ず割り当てる | 任意 |
+|---|---|---|
+| `RootContainerBuilder` | なし | なし |
+| `LogicContainerBuilder` | `yarnProject`（`YarnProject`）。対話を作る時に `YarnProject.Program` を読む | `startsAutomatically`（既定は付いている。外すと自動で始まらない） |
+| `ViewContainerBuilder` | `lineViewParent`（子に `LineView` を置いた Transform）、`optionRootsParent`（子に `OptionRoot` を置いた Transform）、`textFeedButton`（`TextFeedButton`）、`fastForwardButton`（`FastForwardButton`）、`optionViewBasePrefab`（`OptionViewBase` の prefab）、`textVisualizePrefabIndex`（`TextVisualizePrefabIndex`）。さらに VContainer の `autoInjectGameObjects` に、`LineView` を置いた GameObject を入れる | `stickyPullSettings`（既定値あり） |
+| `PresenterContainerBuilder` | なし | なし |
+
+- 必ず割り当てる物が無い時、組み立て（`Configure`）の中で null の参照を使う。`lineViewParent` と `optionRootsParent` は `GetComponentsInChildren` を呼ぶので例外になる。ほかの物も含め、どの例外で止まるかは Play モードで確かめていない
+- `LineView` は `lineViewParent` の子から集めて配列のまま登録するので、`autoInjectGameObjects` に入れないと `[Inject]`（`Construct`）が届かない。入れ忘れると、台詞を出す所で例外になって進行が止まる（例外がどこに出るかは未確認）
+- `LineView` は `[CompoProp]`、選択肢の prefab の `OptionViewBase` は `[CompoProp(GetFrom.Children)]`（子から）で `TMP_Text` を取るので、その位置に `TMP_Text` を置く
+- `LineView` の `lineViewKey` と `OptionRoot` の `key` が、行のタグ（`#MiddleCenter` など、`LineViewKey`）と選択肢のタグ（`OptionViewKey`）で選ぶ置き場所になる
+- 上の手順で Play モードまで動かす事は、この版では確かめていない（「8. 既知の制限と未確認の事」）
+
+### 落とし穴
+
+- `textVisualizePrefabIndex` の中身は空でよい。`Fall` の演出が `TextVisualizeTag.Fall` のプレハブを引く時だけ中身が要る。作るのはメニュー「Amenone Dialogue/TextVisualizeTagPrefabIndex」
+- 選択肢の置き場所の対応の `OptionDictionary` は、メニュー「Amenone Dialogue/Create Option Dictionary」で作る
+- 台詞の文をどこから引くかは `FORCE_YARNLOCALIZATION` で決まる（「3. 依存の一覧」）
+- 台詞の中のタグ（`<Twist>…</Twist>` など）は 1 文字ごとの印（`CharData.MarkUp`）になる。受けるタグの名前は `TextVisualizeTag` の列挙と、`LineDisplayExtensions.AddMarkupName` で足した名前。知らないタグは TMP の文字としてそのまま出る
+
+## 5. MessagePipe の登録
+
+ライブラリの Logic・View・Presenter は別々のスコープなので、ブローカー（`IAsyncPublisher<T>` / `IAsyncSubscriber<T>`）は全員が見える親のスコープに 1 組だけ置く必要がある。`RootContainerBuilder` は `builder.RegisterDialogueMessaging()` を呼び、次のように振る舞う（`Root/Container/DialogueMessagingExtensions.cs`）。
+
+- 親のスコープに `IAsyncPublisher<NodeStart>` があれば、何もせず親のブローカーを使う
+- 親のスコープに `MessagePipeOptions` だけがあり、ブローカーが無ければ、直し方を書いた `InvalidOperationException` を投げる
+- どちらも無ければ（単体で動かす時）、Root が自分で `RegisterMessagePipe()` を呼び、ライブラリのメッセージのブローカーを登録する
+
+ゲームに組み込む時は、ゲームのいちばん親のスコープで MessagePipe を登録し、その options をライブラリに渡す。
+
+```csharp
+protected override void Configure(IContainerBuilder builder)
+{
+    var options = builder.RegisterMessagePipe();
+    builder.RegisterDialogueMessageBrokers(options);
+    // ゲームのメッセージのブローカーも同じ options で登録する
+}
+```
+
+ゲームの asmdef に `MessagePipe`、`MessagePipe.VContainer`、`amenone.dialogue.root` への参照が要る。
+
+- MessagePipe（コア）の asmdef（`MessagePipe.asmdef`）は、`versionDefines` で VContainer 1.14.0 以上を見つけると `MESSAGEPIPE_OPENGENERICS_SUPPORT` を付ける。`MESSAGEPIPE_OPENGENERICS_SUPPORT && UNITY_2022_1_OR_NEWER` の時、`RegisterMessagePipe()` は型を決めない（open generic の）登録を一括で行う（`ServiceCollectionExtensions.cs`）。このため、この条件では `RegisterDialogueMessageBrokers(options)` を省いても、ライブラリの型が解決でき、Root も例外を投げない
+- それでも明示を勧める。条件を満たさない環境（VContainer 1.14.0 より前など）では一括の登録が無いので、省くと Root が例外を投げる。IL2CPP では、型を決めた登録の方が AOT で型が落ちる心配が少ない（open generic の登録が IL2CPP で動くかは未確認）。また、どの型がどこで登録されているかがコードから読める
+- `RegisterDialogueMessageBrokers` に渡す options の `InstanceLifetime` は `Singleton`（MessagePipe の既定）にする。`Scoped` などだと、Logic・View・Presenter のスコープごとに別々のブローカーができてメッセージが届かないので、例外を投げる
+- 同時に 2 つの対話を走らせる場合、ブローカーをゲームのいちばん親に置くと、2 つの対話のメッセージが同じブローカーを通って混ざる。対話の連鎖（Root → Logic → View → Presenter）ごとに、その Root か Root のすぐ上のスコープで登録する（例えば、ゲームの親に MessagePipe を置かず、Root に自分で登録させる）。2 つ同時に走らせる形は未確認
+
+メッセージは `IAsyncPublisher<T>.Publish`（待たずに進む）で発行される。受ける側は `IAsyncSubscriber<T>` で購読する。同期の `ISubscriber<T>` は MessagePipe の別のブローカーなので、ライブラリのメッセージは届かない。
+
+## 6. ゲーム側からの拡張点
+
+ゲームの `LifetimeScope` を、使う口が登録されているスコープの子孫に置いて解決する。Logic の口（`ICommandStorage`、`IDialogueVariableWriter`、`IDialogueStartable` など）は `LogicContainerBuilder` の子孫から、`LineDisplayExtensions` は `RootContainerBuilder` の子孫から解決できる。
+
+### 命令の登録（`ICommandStorage`、`LogicAbstract`）
+
+台本の `<<名前 引数…>>` を、名前で登録したメソッドに振り分ける。引数は文字列から引数の型に変換される。省略時の値を持つ引数は台本で省ける。`UniTask` を返すメソッドを登録すると、終わるまで次へ進まない。
+
+```csharp
+public sealed class AudioCommands
+{
+    private readonly ICommandStorage _commands;
+    public AudioCommands(ICommandStorage commands) => _commands = commands;
+
+    public void RegisterCommands()
+    {
+        _commands.RegisterCommandHandler<string>("play_sound", PlaySound);      // <<play_sound door>>
+        _commands.RegisterCommandHandler<float>("fade_out", FadeOutAsync);     // <<fade_out 0.5>>
+    }
+
+    private void PlaySound(string soundName) { /* ... */ }
+    private UniTask FadeOutAsync(float seconds) { /* ... */ return UniTask.CompletedTask; }
+}
+```
+
+登録は組み立ての後に行う（例: `builder.RegisterBuildCallback(r => r.Resolve<AudioCommands>().RegisterCommands());`）。
+
+### 表示の拡張（`LineDisplayExtensions`、`ViewAbstract`）
+
+Root に 1 つだけある。子のスコープで登録した物は親から見えないので、ゲームの組み立ての `RegisterBuildCallback` で解決して足す。
+
+```csharp
+builder.RegisterBuildCallback(resolver =>
+{
+    var display = resolver.Resolve<LineDisplayExtensions>();
+    display.AddMarkupName("emphasis");                       // 台詞のタグ <emphasis>…</emphasis> を印として受ける
+    display.AddCharShowAnimator(new MyCharShowAnimator());   // 印の名前（MarkupName）で文字の演出を足す。名前も受けるようになる
+    display.AddContextProcessor(new MyLineProcessor());      // 台詞を表示の前に加工する
+    display.AddOptionContextProcessor(new MyOptionProcessor());
+    display.UseCharTiming(new LineCharTiming(0.08f, 0.06f)); // 1 文字の長さと次の文字までの間隔（秒、文字の速さを掛ける前）
+    display.UseMotionScheduler(myScheduler);                 // LitMotion のスケジューラー（ゲームの時計に乗せる時）
+});
+```
+
+- `IMarkupCharShowAnimator`: `MarkupName`（受ける印の名前）、`Register`（その文字の動きを `MotionSequenceBuilder` に積む）、`GetIntervalToNextCharEntrance`（次の文字が出始めるまでの間隔）、`OnTextFeed`（送られた時）
+- `ILineViewContextProcessor.Process(LineViewContext)`: 文字・話し手の名前・印・行 ID（`LineId`）を受けて、替えた物を返す。足した順に回る
+- `IOptionViewContextProcessor.Process(OptionViewContext)`: 選択肢を出す前に、文と出すかどうかを替える。`OptionViewData.IsAvailable` には Yarn の条件の結果が入って来る。`index` は Yarn の選択肢の番号のまま保つ
+
+### 台本の変数の書き込み（`IDialogueVariableWriter`、`LogicAbstract`）
+
+```csharp
+_variables.Write("$score", 10f);
+_variables.Write("$met_guide", true);
+_variables.Write("$player_name", "Alex");
+```
+
+対話が読む Logic のスコープの変数の入れ物に書く（子のスコープから解決しても同じ入れ物）。
+
+### 場面を指定して開始（`IDialogueStartable`、`IDialogueNodeLookup`、`LogicAbstract`）
+
+`LogicContainerBuilder` の `startsAutomatically` を外し、ゲームの側から始める。
+
+```csharp
+if (_nodes.NodeExists("Intro")) _dialogue.Start("Intro");
+```
+
+`Start()` は `START` から始める。`Stop()` で止める。
+
+### 終わりの通知（`NodeEnd`、`LogicAbstract`）
+
+`NodeEnd` は、Yarn の対話全体が終わった時（`<<jump>>` せずに最後の場面が終わった時。`Dialogue.DialogueCompleteHandler`）に 1 度発行される。場面ごとの終わりではない。
+
+```csharp
+public sealed class DialogueEndListener : IInitializable, IDisposable
+{
+    private readonly IAsyncSubscriber<NodeEnd> _nodeEnd;
+    private IDisposable _subscription;
+
+    public DialogueEndListener(IAsyncSubscriber<NodeEnd> nodeEnd) => _nodeEnd = nodeEnd;
+
+    public void Initialize() => _subscription = _nodeEnd.Subscribe((_, token) => OnDialogueEndAsync(token));
+
+    public void Dispose() => _subscription?.Dispose();
+
+    private UniTask OnDialogueEndAsync(CancellationToken token) { /* ... */ return UniTask.CompletedTask; }
+}
+```
+
+場面の始まりは `NodeStart`（`Context.NodeName`）で受けられる。
+
+### そのほか
+
+- 文字の速さ: `ITextSpeedHandlable.SetTextSpeed(float)`（既定 1）
+- 選択肢の見た目: `OptionViewBase` の `focused` / `unfocused`（UnityEvent）が `Focus` / `UnFocus` で呼ばれる
+
+## 7. 旧版からの上げ方
+
+旧版は 2 つある。どちらも根のフォルダ（`Assets/Scripts` など）と各ファイルの GUID が 2.0.0 と同じなので、置いている場所のまま上書きで入る（「2. 入れ方」）。
+
+- (a) gon のリポジトリで公開していた 1.0.4
+- (b) 1.0.4 より後の、公開していない版（通知が VitalRouter のまま、文字の演出などが入った版）を自分のプロジェクトに持っている場合
+
+### 共通の手順
+
+1. 依存を足す: 「3. 依存の一覧」の物のうち、まだ無い物を入れる。MessagePipe.VContainer が無いと、`DialogueMessagingExtensions.cs` で `RegisterMessagePipe` / `RegisterMessageBroker` が見つからない `error CS1061` になる
+2. `.unitypackage` を入れる。`Assets/AmenoneDialogue/` へ先に移す必要は無い（移したい時は、フォルダを丸ごと移すだけでよい。根のフォルダの GUID は同じ）
+3. ゲームのコードを直す
+   - 購読: `ICommandSubscribable.Subscribe<T>((cmd, ctx) => …)` → `IAsyncSubscriber<T>.Subscribe((message, token) => …)`。戻り値の `IDisposable` を持ち、捨てる時に `Dispose` する
+   - 発行: `ICommandPublisher.PublishAsync(message)` → `IAsyncPublisher<T>.PublishAsync(message, token)`（待つ）または `Publish(message, token)`（待たない）
+   - メッセージの型は `ICommand` を実装しなくなった。`IDialogueCommand` は無い
+   - `[Routes]` と `RegisterVitalRouter` で受けていた所は、上の購読に替える
+   - ゲームに MessagePipe の親のスコープがあれば、そこに `RegisterDialogueMessageBrokers(options)` を足す（「5. MessagePipe の登録」）
+4. asmdef の参照を直す: ゲームの asmdef から VitalRouter を外し、`MessagePipe`（購読・発行する所）と `MessagePipe.VContainer`（登録する所）を足す。ライブラリの asmdef 同士は GUID で参照しているので直さなくてよい。Root の asmdef の名前が `amenone.gon.rootcontainer` から `amenone.dialogue.root` に変わったので、名前で参照していた所は替える（GUID は同じ）
+5. VitalRouter を外す（任意）: ゲームのコードが VitalRouter を使っていなければ、`jp.hadashikick.vitalrouter.unity`（git パッケージ）と NuGet の `VitalRouter`（`packages.config` の行と `Assets/Packages/VitalRouter.<版>`）を外せる。2.0.0 のライブラリは VitalRouter を参照していない。`VitalRouter.R3` など VitalRouter に依る物を入れていれば一緒に外す。外した後に `Packages/packages-lock.json` を消して開き直すと、lock に残らない
+
+### (a) 1.0.4 から上げる時
+
+- 1.0.4 はライブラリのフォルダの中に `UnitGenerator.dll` と `View/Amenonegames.AutoComponentProperty.dll` を置いていた。2.0.0 のパッケージはどちらも入れないので、入れた後も残る。AutoComponentProperty はそのまま使える（ほかの場所にも置いていれば 1 か所にまとめる。2 つ置いた時の挙動は未確認）。UnitGenerator は 2.0.0 が使わないので消してよい
+- 1.0.4 に無かった物が要るようになる: `ViewContainerBuilder` の `textVisualizePrefabIndex`（「4. 組み立て方と落とし穴」）と、「3. 依存の一覧」のうち 1.0.4 で要らなかった物（`CHANGELOG.md` の 2.0.0 の依存の項）
+- 作成メニュー「Amenone Dialogue/…」は 2.0.0 で足した物（1.0.4 には無い）
+- 1.0.4 から直接上げる形は未確認
+
+### (b) 1.0.4 より後の未公開の版から上げる時
+
+- 作成メニューの場所が「gon/…」から「Amenone Dialogue/…」に変わる（`Create Option Dictionary`、`TextVisualizeTagPrefabIndex`）。作成済みのアセットはそのまま使える
+- Root の asmdef の名前の変更（共通の手順の 4）
+- ソースジェネレータの DLL を、ライブラリと同じフォルダの下に置いていれば、そのまま残る
+
+## 8. 既知の制限と未確認の事
+
+- IL2CPP ビルドで MessagePipe のブローカーが生成できるか（AOT）は未確認
+- View と入力を通した Play モード・ビルドでの動作は、この版（MessagePipe 版）では未確認。確かめたのはコンパイルと EditMode テスト（「10. 確かめた構成」）
+- 台本の関数（`<<if f() >= 2>>` のような読み出し）を登録する `IActionRegistration.AddFunction` は、`ActionRegistration` が要る `Yarn.Dialogue` がコンテナに登録されていないので、解決できない
+- 話し手の名前（`LineViewContext.SpeakerName`）はいつも空。Yarn の `名前: 台詞` の書き方は、名前が台詞の中に混ざって出る
+- 台詞の文を ID で引く所（`ILineProvider`）と文字の解釈（`LineTextParser`）は Presenter の実装の側（`amenone.dialogue.adapter`）にあり、状態機械を通さずに台詞を 1 行だけ出す使い方には、抽象に出す直しが要る
+- 状態機械は「送りを待つ」前提で、自動送りは無い
+- `DialogueHolder.Start` は `StartDialogue` を発行してから `SetNode` と `Continue` を呼び、発行の結果を待たない。購読側がこの順に頼っている点は残る（Play モードでの影響は未確認）
+- 選択肢を出している間（`WaitingForOptionSelection`）は命令が走らない
+- 2 つの対話を同時に走らせる形は未確認
+- 「3. 依存の一覧」の版より前の Unity・VContainer・MessagePipe での動作は未確認
+
+## 9. 開発のしかた
+
+- 正本は https://github.com/amenonegames/AmenoneExtension の `UnityPackageSources/AmenoneDialogue/`（とフォルダの `.meta` の `UnityPackageSources/AmenoneDialogue.meta`）。AmenoneExtension の Unity プロジェクトはライブラリの依存を持たないので、Unity が読まない `UnityPackageSources/` に置いている
+- 編集は、依存のそろった Unity プロジェクトの `Assets/AmenoneDialogue/` に写して行い、直した物を `UnityPackageSources/AmenoneDialogue/` に戻す
+- 新しいファイルの `.meta` は Unity に作らせる（手で書かない）。GUID を変えない
+- `.unitypackage` の作り方（Python 3.10 以上の標準ライブラリだけ。Unity は要らない）:
+
+  ```sh
+  python Tools/build_unitypackage.py --source UnityPackageSources/AmenoneDialogue --root Assets/AmenoneDialogue --output Build/AmenoneDialogue-2.0.0.unitypackage
+  ```
+
+  - `.meta` の無いファイル、対応するファイルの無い `.meta`、GUID の重複があると、エラーで止まる
+  - Unity と同じく、名前が `.` で始まる物と `~` で終わる物は対象から外す（外した物は標準エラーに出す）
+  - 同じ Python と zlib なら、同じ入力から同じバイト列ができる。環境が違うと gzip の結果は変わり得るので、比べる時はスクリプトが出す `tar sha256` を見る
+  - 改行コードは、リポジトリの `.gitattributes`（`UnityPackageSources/** -text`）で git の変換を止めている。どこで checkout しても同じバイトになる
+  - `Build/` と `*.unitypackage` は git で無視している
+- テストの回し方（依存のそろったプロジェクトで。`-quit` は付けない）:
+
+  ```sh
+  Unity -batchmode -nographics -projectPath <プロジェクト> -runTests -testPlatform EditMode \
+    -assemblyNames "amenone.dialogue.logic.tests;amenone.dialogue.messaging.tests" -testResults results.xml -logFile test.log
+  ```
+
+- 版を上げる手順
+  1. `package-version.txt`、`CHANGELOG.md`、この README の先頭の版を直す
+  2. 上のスクリプトで `Build/AmenoneDialogue-<版>.unitypackage` を組み立てる
+  3. タグ `dialogue/<版>` を打ち、GitHub の Releases に `.unitypackage` を添付する
+
+## 10. 確かめた構成
+
+2.0.0 で、次の組み合わせのバッチモードで確かめた。
+
+- Unity 6000.7.0b1、VContainer 1.19.0、MessagePipe / MessagePipe.VContainer（コミット 3adc01d）、Yarn Spinner 3.2.8、com.unity.localization 2.0.0、com.unity.inputsystem 6.7.0、com.unity.ugui 2.7.0、com.unity.test-framework 1.9.0、AutoConstructor 5.6.0、FastEnum 1.8.0（NuGetForUnity は入れず、展開済みの `Assets/Packages/` を置いた）
+- Scripting Define Symbols は `RH_SerializedDictionaryPro;FORCE_YARNLOCALIZATION`
+- 新規に入れる形: 依存だけを入れたプロジェクトに `-importPackage` で入れ、全ファイルが `Assets/AmenoneDialogue/` に `.meta` を含めてバイト単位で同じに展開された。コンパイルの `error CS` 0、EditMode テスト 31 件が全件通った
+- 上書きで入れる形: 1.0.4 より後の未公開の版（VitalRouter 版）を `Assets/Scripts/` に置き、コンパイルが通る状態から入れた。増えたファイルも `Assets/Scripts/` の下に置かれた。入れた直後（VitalRouter を残したまま）と、VitalRouter を外した後のどちらも、`error CS` 0、EditMode テスト 31 件が全件通った。ゲームのコードの直し（「7. 旧版からの上げ方」の 3）は含まない
+- 親のスコープが `RegisterMessagePipe()` だけを呼んだ時（VContainer 1.19.0）、`RegisterDialogueMessaging()` が例外を投げず、`IAsyncPublisher<NodeStart>` が解決できた

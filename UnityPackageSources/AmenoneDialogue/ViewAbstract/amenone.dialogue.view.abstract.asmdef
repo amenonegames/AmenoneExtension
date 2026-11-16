@@ -1,0 +1,22 @@
+{
+    "name": "amenone.dialogue.view.abstract",
+    "rootNamespace": "",
+    "references": [
+        "GUID:f51ebe6a0ceec4240a699833d6309b23",
+        "GUID:0f78d03d09b219a40b126c557bd9b874",
+        "GUID:7b2d507c30db69242acc98084dc3b4f7",
+        "GUID:2496b14b873b39148a83cd970adaf5fa",
+        "GUID:7142d0e5fd746f244aa4751fd21dccef",
+        "GUID:6055be8ebefd69e48b49212b09b47b2f",
+        "GUID:3b570a5146f9d4f0fa107ed4559471a3"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

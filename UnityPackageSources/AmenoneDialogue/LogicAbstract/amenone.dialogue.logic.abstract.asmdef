@@ -1,0 +1,18 @@
+{
+    "name": "amenone.dialogue.logic.abstract",
+    "rootNamespace": "",
+    "references": [
+        "GUID:7b2d507c30db69242acc98084dc3b4f7",
+        "GUID:2496b14b873b39148a83cd970adaf5fa",
+        "GUID:f51ebe6a0ceec4240a699833d6309b23"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

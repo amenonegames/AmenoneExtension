@@ -1,0 +1,21 @@
+{
+    "name": "amenone.dialogue.presenterlayer.container",
+    "rootNamespace": "",
+    "references": [
+        "GUID:4b24cf2a88628ed4294cd49b8bf39988",
+        "GUID:a584831d0edd27d42aa90472906f50eb",
+        "GUID:d93c12c7a5ef5da4a90f3ce5a04a11cd",
+        "GUID:0f78d03d09b219a40b126c557bd9b874",
+        "GUID:db2005385af98924d857b867b562288a",
+        "GUID:b0214a6008ed146ff8f122a6a9c2f6cc"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
