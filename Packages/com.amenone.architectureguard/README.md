@@ -29,7 +29,7 @@ Unity プロジェクトで文章として決めている設計の決まりを�
    }
    ```
 
-   `amenone.architectureguard` は `autoReferenced: false` です。そのため Assembly-CSharp など、参照を足していないアセンブリには適用されない想定です（Unity の文書に基づく想定で、このパッケージでは未確認）。
+   `amenone.architectureguard` は `autoReferenced: false` です。そのため Assembly-CSharp など、参照を足していないアセンブリには適用されません（Unity 6000.7.0b1 のバッチモードのコンパイルで確認。他のバージョンでは未確認）。
 
 ## 診断の一覧
 
@@ -89,7 +89,7 @@ public sealed class SceneEntryPoint : MonoBehaviour
 
 既定の重大度は、Analyzer のソースの `ArchitectureGuardDiagnostics.DefaultSeverity` の 1 か所で決めています。パッケージとして既定を変えるときは、そこを書き換えて DLL を作り直し、`AnalyzerReleases.Unshipped.md` に変更を書きます（後述の手順）。
 
-利用する側のプロジェクトで AG0001〜AG0004 の重大度を変えるには、ルールセットファイルを使う想定です。Unity の文書に基づく想定で、このパッケージでは未確認です。`Assets/Default.ruleset` に書くとプロジェクト全体に、asmdef と同じフォルダに `<アセンブリ名>.ruleset` を置くとそのアセンブリだけに効くとされています。例えば警告をエラーにするには次のように書きます。
+利用する側のプロジェクトで AG0001〜AG0004 の重大度を変えるには、ルールセットファイルを使います。`Assets/Default.ruleset` に書くとプロジェクト全体に、asmdef と同じフォルダに `<アセンブリ名>.ruleset` を置くとそのアセンブリだけに効きます（どちらも Unity 6000.7.0b1 のバッチモードのコンパイルで確認。他のバージョンでは未確認）。例えば警告をエラーにするには次のように書きます。
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
