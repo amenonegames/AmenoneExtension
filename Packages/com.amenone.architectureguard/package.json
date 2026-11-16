@@ -1,0 +1,10 @@
+{
+  "name": "com.amenone.architectureguard",
+  "displayName": "AmenoneArchitectureGuard",
+  "version": "0.1.0",
+  "unity": "2022.3",
+  "description": "Roslyn analyzers that turn written architecture rules (time access, Unity messages) into compile-time diagnostics for assemblies that reference amenone.architectureguard.",
+  "author": {
+    "name": "amenonegames"
+  }
+}

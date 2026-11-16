@@ -70,3 +70,9 @@ crashlytics-build.properties
 # Temporary auto-generated Android Assets
 /[Aa]ssets/[Ss]treamingAssets/aa.meta
 /[Aa]ssets/[Ss]treamingAssets/aa/*
+
+# ArchitectureGuard analyzer sources (the global *.csproj / *.sln rules above target Unity-generated files)
+/Packages/com.amenone.architectureguard/Source~/**/bin/
+/Packages/com.amenone.architectureguard/Source~/**/obj/
+!/Packages/com.amenone.architectureguard/Source~/**/*.csproj
+!/Packages/com.amenone.architectureguard/Source~/*.sln
