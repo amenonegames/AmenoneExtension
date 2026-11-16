@@ -1,5 +1,5 @@
 ﻿using Identifier;
-using RotaryHeart.Lib.SerializableDictionaryPro;
+using Amenone.CSharpExtension;
 using UnityEngine;
 
 namespace View.Utils

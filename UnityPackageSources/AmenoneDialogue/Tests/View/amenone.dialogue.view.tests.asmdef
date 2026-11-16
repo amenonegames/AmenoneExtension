@@ -1,0 +1,26 @@
+{
+    "name": "amenone.dialogue.view.tests",
+    "rootNamespace": "",
+    "references": [
+        "GUID:e9edd9469d1d8ee4f84e573fd8b1221b",
+        "GUID:7b2d507c30db69242acc98084dc3b4f7",
+        "GUID:2496b14b873b39148a83cd970adaf5fa",
+        "GUID:27619889b8ba8c24980f49ee34dbb44a",
+        "GUID:0acc523941302664db1f4e527237feb3"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

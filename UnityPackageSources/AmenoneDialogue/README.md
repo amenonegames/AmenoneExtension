@@ -20,7 +20,7 @@
 | `Presenter/ContainerBuilder/` | `amenone.dialogue.presenterlayer.container` | Presenter の組み立て（`PresenterContainerBuilder`） |
 | `Root/Abstract/` | `amenone.dialogue.rootAbstract` | 対話の寿命の CancellationToken の口（`ITokenGettable`） |
 | `Root/Container/` | `amenone.dialogue.root` | いちばん親の組み立て（`RootContainerBuilder`）。MessagePipe のブローカーの登録（`DialogueMessagingExtensions`）と `LineDisplayExtensions` を置く |
-| `Tests/` | `amenone.dialogue.logic.tests` / `amenone.dialogue.messaging.tests` | EditMode テスト（Editor のみ、`UNITY_INCLUDE_TESTS` の時だけ） |
+| `Tests/` | `amenone.dialogue.logic.tests` / `amenone.dialogue.messaging.tests` / `amenone.dialogue.view.tests` | EditMode テスト（Editor のみ、`UNITY_INCLUDE_TESTS` の時だけ） |
 
 ## 2. 入れ方
 
@@ -33,7 +33,8 @@
 既に同じ GUID のファイルを持つプロジェクト（旧版を `Assets/Scripts/` などに置いているプロジェクト）に入れると、次のようになる。
 
 - 既にあるファイルは、今の場所のまま中身が新しい版に置き換わる
-- 新しい版で増えたファイルも、親のフォルダの GUID をたどって今の場所（例: `Assets/Scripts/Root/Container/DialogueMessagingExtensions.cs`）に置かれる。`Assets/AmenoneDialogue/` に別の木はできない（根のフォルダの GUID が旧版の根のフォルダと同じため）
+- 既にあるフォルダの中に増えたファイルも、親のフォルダの GUID をたどって今の場所（例: `Assets/Scripts/Root/Container/DialogueMessagingExtensions.cs`）に置かれる
+- 根のフォルダの直下に増えた物（2.0.0 では `README.md`、`CHANGELOG.md`、`package-version.txt`、旧版に無ければ `Tests/`）は、旧版の根のフォルダ（例: `Assets/Scripts`）には入らず、`Assets/AmenoneDialogue/` という別の木に置かれる。ログに `GUID [b5dc9995de9d4339b194f0ae42ae4a8d] for asset 'Assets/AmenoneDialogue' conflicts with: 'Assets/Scripts' (current owner) Assigning a new guid.` と出て、`Assets/AmenoneDialogue` のフォルダには新しい GUID が振られる。旧版を先に `Assets/AmenoneDialogue` へ移しておけば起きない（「7. 旧版からの上げ方」）
 - パッケージに無いファイルは消されずに残る（2.0.0 で、旧版からファイル単位で消えた物はソースジェネレータの DLL だけ。これも残る）
 
 上げる時の手順は「7. 旧版からの上げ方」。
@@ -47,7 +48,7 @@ git の依存はコミットの hash で固定した例（「10. 確かめた構
 ```json
 {
   "dependencies": {
-    "com.amenone.csharpextension": "https://github.com/amenonegames/AmenoneExtension.git?path=/Packages/com.amenone.csharpextension#1ec3f5553fb72cab03f758bef9a89070fd8e44be",
+    "com.amenone.csharpextension": "https://github.com/amenonegames/AmenoneExtension.git?path=/Packages/com.amenone.csharpextension",
     "com.amenone.unityextension": "https://github.com/amenonegames/AmenoneExtension.git?path=/Packages/com.amenone.unityextension#1ec3f5553fb72cab03f758bef9a89070fd8e44be",
     "com.amenone.vcontainerextensions": "https://github.com/amenonegames/AmenoneExtension.git?path=/Packages/com.amenone.vcontainerextensions#1ec3f5553fb72cab03f758bef9a89070fd8e44be",
     "com.amenone.litmotiontext": "https://github.com/amenonegames/LitMotionText.git?path=/Assets/LitMotionText#c32ed88afbdc961b5ed1232a6b5020b8cbe2e092",
@@ -74,11 +75,14 @@ git の依存はコミットの hash で固定した例（「10. 確かめた構
 }
 ```
 
+- `com.amenone.csharpextension` は 0.1.5 以上が要る（`SerializableDictionary<TKey, TValue>` を使う）。行は上のとおり版を書かない形のままでよいが、版は `Packages/packages-lock.json` の hash で固定される。lock の hash が 0.1.5 より古いと新しい型が無く、`TextVisualizePrefabIndex` などがコンパイルエラーになるので、Package Manager の Update を押すか、lock の `com.amenone.csharpextension` の塊を消して開き直し、パッケージを新しくする
 - VContainer は OpenUPM から入れるので、`scopedRegistries` の項目も要る（既にあれば `scopes` に `jp.hadashikick.vcontainer` を足す）
 - `com.unity.addressables` はライブラリが直接参照するが、`com.unity.localization` が連れてくるので、manifest に書かなくてよい
 - `com.unity.test-framework` は、ライブラリの EditMode テストを回す時だけ要る
 
 ### NuGet（NuGetForUnity の `Assets/packages.config`）
+
+AutoConstructor は 1.0.4 には無く、2.0.0 で要る（`DialogueVariableWriter` の `[AutoConstructor]`）。旧版から上げる時に足りない事がある（「7. 旧版からの上げ方」）。
 
 ```xml
 <package id="AutoConstructor" version="5.6.0" manuallyInstalled="true" />
@@ -95,14 +99,12 @@ git の依存はコミットの hash で固定した例（「10. 確かめた構
 | 物 | 置き場所の例 | メモ |
 |---|---|---|
 | Yarn Spinner for Unity（`dev.yarnspinner.unity`） | `Packages/dev.yarnspinner.unity/`（埋め込み） | Asset Store の有償の版。アドオンは要らない |
-| Rotary Heart の SerializableDictionary Pro | `Assets/ExternalPlugins/Rotary Heart/` | Asset Store の有償アセット。`OptionDictionary` と `SerializableDicGameObjPerTextVisualizeTag` が使う |
 
-どちらも再配布できないので、このパッケージに入れていない。
+再配布できないので、このパッケージに入れていない。
 
 ### Scripting Define Symbols
 
 - `FORCE_YARNLOCALIZATION`: 付けると、台詞の文を Yarn のプロジェクトの言語別の文から引く（`YarnLocalizationLineProvider`）。付けないと Unity Localization から引く（`UniyLocalizationLineProvider`）。切り替えは `PresenterContainerBuilder` にある
-- `RH_SerializedDictionaryPro`: ライブラリのコードはこの記号を参照していない（「10. 確かめた構成」では付けていた）
 
 ### `csc.rsp`
 
@@ -130,12 +132,13 @@ git の依存はコミットの hash で固定した例（「10. 確かめた構
 - `LineView` は `lineViewParent` の子から集めて配列のまま登録するので、`autoInjectGameObjects` に入れないと `[Inject]`（`Construct`）が届かない。入れ忘れると、台詞を出す所で例外になって進行が止まる（例外がどこに出るかは未確認）
 - `LineView` は `[CompoProp]`、選択肢の prefab の `OptionViewBase` は `[CompoProp(GetFrom.Children)]`（子から）で `TMP_Text` を取るので、その位置に `TMP_Text` を置く
 - `LineView` の `lineViewKey` と `OptionRoot` の `key` が、行のタグ（`#MiddleCenter` など、`LineViewKey`）と選択肢のタグ（`OptionViewKey`）で選ぶ置き場所になる
-- 上の手順で Play モードまで動かす事は、この版では確かめていない（「8. 既知の制限と未確認の事」）
+- この最小の手順そのものを Play モードで動かす事は確かめていない（Play モードで確かめたのは、実際のゲームの組み立て。「10. 確かめた構成」）
 
 ### 落とし穴
 
 - `textVisualizePrefabIndex` の中身は空でよい。`Fall` の演出が `TextVisualizeTag.Fall` のプレハブを引く時だけ中身が要る。作るのはメニュー「Amenone Dialogue/TextVisualizeTagPrefabIndex」
 - 選択肢の置き場所の対応の `OptionDictionary` は、メニュー「Amenone Dialogue/Create Option Dictionary」で作る
+- `TextVisualizePrefabIndex` の `dic` と `OptionDictionary` は、`com.amenone.csharpextension` の `SerializableDictionary<TKey, TValue>`。インスペクタでは `pairs`（`key` と `value` の組のリスト）として編集する。リストに要素を足すと直前の要素が複製されてキーが重なるので、足した後にキーを直す。キーが重なっていても読み込みで例外にはならず、先に書かれた組が使われる
 - 台詞の文をどこから引くかは `FORCE_YARNLOCALIZATION` で決まる（「3. 依存の一覧」）
 - 台詞の中のタグ（`<Twist>…</Twist>` など）は 1 文字ごとの印（`CharData.MarkUp`）になる。受けるタグの名前は `TextVisualizeTag` の列挙と、`LineDisplayExtensions.AddMarkupName` で足した名前。知らないタグは TMP の文字としてそのまま出る
 
@@ -264,46 +267,79 @@ public sealed class DialogueEndListener : IInitializable, IDisposable
 
 ## 7. 旧版からの上げ方
 
-旧版は 2 つある。どちらも根のフォルダ（`Assets/Scripts` など）と各ファイルの GUID が 2.0.0 と同じなので、置いている場所のまま上書きで入る（「2. 入れ方」）。
+旧版（gon のリポジトリで公開していた 1.0.4 と、それより後の公開していない版）は、根のフォルダと各ファイルの GUID が 2.0.0 と同じなので、上書きで入る。ただし旧版を `Assets/AmenoneDialogue/` 以外（`Assets/Scripts/` など）に置いていると、根の直下に増えた物が別の木に置かれる（「2. 入れ方」）。実際のプロジェクトは版がはっきり分かれているとは限らないので、版で分けずに、次のうち自分のプロジェクトに当てはまる物だけを行う。
 
-- (a) gon のリポジトリで公開していた 1.0.4
-- (b) 1.0.4 より後の、公開していない版（通知が VitalRouter のまま、文字の演出などが入った版）を自分のプロジェクトに持っている場合
+### 1. 入れる前に
 
-### 共通の手順
+- [ ] **旧版を置いているフォルダ**: `Assets/AmenoneDialogue/` 以外に置いていて、そのフォルダにライブラリだけが入っているなら、Unity を閉じた状態で、フォルダを `.meta` ごと `Assets/AmenoneDialogue` に名前を変えて移す（例: `Assets/Scripts` → `Assets/AmenoneDialogue`、`Assets/Scripts.meta` → `Assets/AmenoneDialogue.meta`）。GUID は同じなので参照は切れない。フォルダを動かしたくない時は、入れた後に「3. 入れた後に」の手順で片付ける
+- [ ] **辞書のアセット**: `TextVisualizePrefabIndex` か `OptionDictionaryAsset` のアセットを持っているか探す（`grep -rl -e 23f54df89d71456b8616a10a678bc9fe -e 037fce639990408ba79957c5b635e9e9 Assets --include=*.asset`）。あれば控えておく（git に入っていればコミットしておく）。書き換えは「辞書のアセットの書き換え」
+- [ ] **依存**: 「3. 依存の一覧」のうち、まだ無い物を入れる。旧版から上げる時に足りなくなりやすいのは、MessagePipe.VContainer（無いと `DialogueMessagingExtensions.cs` で `RegisterMessagePipe` / `RegisterMessageBroker` が見つからない `error CS1061`）、NuGet の AutoConstructor（`DialogueVariableWriter` の `[AutoConstructor]` が使う。1.0.4 には無かった）、`com.amenone.csharpextension` 0.1.5 以上（lock の更新が要る事がある）
 
-1. 依存を足す: 「3. 依存の一覧」の物のうち、まだ無い物を入れる。MessagePipe.VContainer が無いと、`DialogueMessagingExtensions.cs` で `RegisterMessagePipe` / `RegisterMessageBroker` が見つからない `error CS1061` になる
-2. `.unitypackage` を入れる。`Assets/AmenoneDialogue/` へ先に移す必要は無い（移したい時は、フォルダを丸ごと移すだけでよい。根のフォルダの GUID は同じ）
-3. ゲームのコードを直す
-   - 購読: `ICommandSubscribable.Subscribe<T>((cmd, ctx) => …)` → `IAsyncSubscriber<T>.Subscribe((message, token) => …)`。戻り値の `IDisposable` を持ち、捨てる時に `Dispose` する
-   - 発行: `ICommandPublisher.PublishAsync(message)` → `IAsyncPublisher<T>.PublishAsync(message, token)`（待つ）または `Publish(message, token)`（待たない）
-   - メッセージの型は `ICommand` を実装しなくなった。`IDialogueCommand` は無い
-   - `[Routes]` と `RegisterVitalRouter` で受けていた所は、上の購読に替える
-   - ゲームに MessagePipe の親のスコープがあれば、そこに `RegisterDialogueMessageBrokers(options)` を足す（「5. MessagePipe の登録」）
-4. asmdef の参照を直す: ゲームの asmdef から VitalRouter を外し、`MessagePipe`（購読・発行する所）と `MessagePipe.VContainer`（登録する所）を足す。ライブラリの asmdef 同士は GUID で参照しているので直さなくてよい。Root の asmdef の名前が `amenone.gon.rootcontainer` から `amenone.dialogue.root` に変わったので、名前で参照していた所は替える（GUID は同じ）
-5. VitalRouter を外す（任意）: ゲームのコードが VitalRouter を使っていなければ、`jp.hadashikick.vitalrouter.unity`（git パッケージ）と NuGet の `VitalRouter`（`packages.config` の行と `Assets/Packages/VitalRouter.<版>`）を外せる。2.0.0 のライブラリは VitalRouter を参照していない。`VitalRouter.R3` など VitalRouter に依る物を入れていれば一緒に外す。外した後に `Packages/packages-lock.json` を消して開き直すと、lock に残らない
+### 2. 入れる
 
-### (a) 1.0.4 から上げる時
+- `.unitypackage` を入れる。辞書のアセットは、書き換えるまでインスペクタで触ったり保存したりしない
 
-- 1.0.4 はライブラリのフォルダの中に `UnitGenerator.dll` と `View/Amenonegames.AutoComponentProperty.dll` を置いていた。2.0.0 のパッケージはどちらも入れないので、入れた後も残る。AutoComponentProperty はそのまま使える（ほかの場所にも置いていれば 1 か所にまとめる。2 つ置いた時の挙動は未確認）。UnitGenerator は 2.0.0 が使わないので消してよい
-- 1.0.4 に無かった物が要るようになる: `ViewContainerBuilder` の `textVisualizePrefabIndex`（「4. 組み立て方と落とし穴」）と、「3. 依存の一覧」のうち 1.0.4 で要らなかった物（`CHANGELOG.md` の 2.0.0 の依存の項）
-- 作成メニュー「Amenone Dialogue/…」は 2.0.0 で足した物（1.0.4 には無い）
-- 1.0.4 から直接上げる形は未確認
+### 3. 入れた後に
 
-### (b) 1.0.4 より後の未公開の版から上げる時
+- [ ] **別の木ができた時**（旧版のフォルダを移さずに入れた時）: `Assets/AmenoneDialogue/` に、根の直下に増えた物（`README.md`、`CHANGELOG.md`、`package-version.txt`、`Tests/` など）が置かれる。Unity を閉じた状態で、その中身を 1 つずつ `.meta` ごと旧版のフォルダの直下へ移し、空になった `Assets/AmenoneDialogue/` と `Assets/AmenoneDialogue.meta` を消す（この `.meta` は Unity が新しく振った GUID なので、残さなくてよい）。開き直すと、GUID の衝突は出ない
+- [ ] **辞書のアセット**: 下の「辞書のアセットの書き換え」で書き換える
+- [ ] **VitalRouter を使うゲームのコード**: 次のとおり直す
+  - 購読: `ICommandSubscribable.Subscribe<T>((cmd, ctx) => …)` → `IAsyncSubscriber<T>.Subscribe((message, token) => …)`。戻り値の `IDisposable` を持ち、捨てる時に `Dispose` する
+  - 発行: `ICommandPublisher.PublishAsync(message)` → `IAsyncPublisher<T>.PublishAsync(message, token)`（待つ）または `Publish(message, token)`（待たない）
+  - メッセージの型は `ICommand` を実装しなくなった。`IDialogueCommand` は無い
+  - `[Routes]` と `RegisterVitalRouter` で受けていた所は、上の購読に替える
+  - ゲームに MessagePipe の親のスコープがあれば、そこに `RegisterDialogueMessageBrokers(options)` を足す（「5. MessagePipe の登録」）
+- [ ] **ゲームの asmdef**: VitalRouter の参照を外し、`MessagePipe`（購読・発行する所）と `MessagePipe.VContainer`（登録する所）を足す。Root の asmdef の名前が `amenone.gon.rootcontainer` から `amenone.dialogue.root` に変わったので、名前で参照していた所は替える（GUID は同じ。ライブラリの asmdef 同士は GUID で参照しているので直さなくてよい）
+- [ ] **VitalRouter を外す（任意）**: ゲームのコードが VitalRouter を使っていなければ、`jp.hadashikick.vitalrouter.unity`（git パッケージ）と NuGet の `VitalRouter`（`packages.config` の行と `Assets/Packages/VitalRouter.<版>`）を外せる。2.0.0 のライブラリは VitalRouter を参照していない。`VitalRouter.R3` など VitalRouter に依る物を入れていれば一緒に外す。外した後に `Packages/packages-lock.json` を消して開き直すと、lock に残らない
+- [ ] **ライブラリのフォルダの中のソースジェネレータの DLL**: 旧版は `UnitGenerator.dll` と `Amenonegames.AutoComponentProperty.dll` をライブラリのフォルダの中に置いていた事がある。パッケージはどちらも入れないので、入れた後も残る。AutoComponentProperty はそのまま使える（ほかの場所にも置いていれば 1 か所にまとめる。2 つ置いた時の挙動は未確認）。UnitGenerator は 2.0.0 が使わないので消してよい
+- [ ] **作成メニュー**: `ScriptableObject` の作成メニューは「Amenone Dialogue/Create Option Dictionary」と「Amenone Dialogue/TextVisualizeTagPrefabIndex」。旧版で「gon/…」の場所にあった物はここに移った。作成済みのアセットはそのまま使える
+- [ ] **SerializableDictionary Pro（Asset Store）**: 2.0.0 のライブラリは参照しないので、ほかに使っていなければ、辞書のアセットを書き換えた後に外せる。使い続けて、同じファイルで `Amenone.CSharpExtension` とそのアセットの名前空間の両方を `using` する場合、同じ名前の型を持っていると型名が衝突し得るので、どちらかを完全修飾する（例: `Amenone.CSharpExtension.SerializableDictionary<TKey, TValue>`）
 
-- 作成メニューの場所が「gon/…」から「Amenone Dialogue/…」に変わる（`Create Option Dictionary`、`TextVisualizeTagPrefabIndex`）。作成済みのアセットはそのまま使える
-- Root の asmdef の名前の変更（共通の手順の 4）
-- ソースジェネレータの DLL を、ライブラリと同じフォルダの下に置いていれば、そのまま残る
+### 辞書のアセットの書き換え
+
+
+旧版の辞書は SerializableDictionary Pro の形（`m_keys` と `m_values` を別々に持つ）で保存されている。2.0.0 は `pairs` という組のリストで読むので、そのまま読み込ませると、例外にはならずに空の辞書になる。Unity はフィールドの名前が合わないデータを黙って捨て、そのアセットを次に保存した時にファイルからも消える。
+
+1. 入れる前に、対象のアセットを控える（「1. 入れる前に」）。対象は、スクリプトの GUID `23f54df89d71456b8616a10a678bc9fe`（`TextVisualizePrefabIndex`）か `037fce639990408ba79957c5b635e9e9`（`OptionDictionaryAsset`）を `m_Script` に持つ `.asset`
+2. `.unitypackage` を入れる。書き換えるまで、対象のアセットをインスペクタで触ったり保存したりしない
+3. Unity を閉じて、各アセットの辞書の塊をテキストで書き換える。`m_keys` の n 番目のキーと `m_values` の n 番目の値を 1 つの組にし、`m_val`、`initialCapacity`、`m_keys`、`m_values` の 4 行（と `m_values` の要素）を消す。列挙のキー（`TextVisualizeTag`）は、`m_keys` に 4 バイトずつの 16 進（リトルエンディアン）で並んでいるので、8 文字ずつ数に直す（`04000000` は 4、`06000000` は 6）。`pairs` の `key` には列挙の数を書く
+4. Unity を開き直し、インスペクタで組の数とキーを確かめる
+
+書き換える前（キーが 4 と 6 の 2 組）:
+
+```yaml
+  dic:
+    m_val: 7
+    initialCapacity: 0
+    m_keys: 0400000006000000
+    m_values:
+    - {fileID: 1000000000000000001, guid: 0123456789abcdef0123456789abcdef, type: 3}
+    - {fileID: 1000000000000000002, guid: 0123456789abcdef0123456789abcdef, type: 3}
+```
+
+書き換えた後:
+
+```yaml
+  dic:
+    pairs:
+    - key: 4
+      value: {fileID: 1000000000000000001, guid: 0123456789abcdef0123456789abcdef, type: 3}
+    - key: 6
+      value: {fileID: 1000000000000000002, guid: 0123456789abcdef0123456789abcdef, type: 3}
+```
+
+組が 1 つも無い辞書（`m_keys: ` と `m_values: []`）は `pairs: []` にする。`OptionDictionaryAsset`（`optionDictionary`、キーは文字列）も同じく `pairs` の `key` に文字列を書く。SerializableDictionary Pro が文字列のキーをどう保存していたかは未確認（その形のアセットを見ていない）
 
 ## 8. 既知の制限と未確認の事
 
 - IL2CPP ビルドで MessagePipe のブローカーが生成できるか（AOT）は未確認
-- View と入力を通した Play モード・ビルドでの動作は、この版（MessagePipe 版）では未確認。確かめたのはコンパイルと EditMode テスト（「10. 確かめた構成」）
+- ビルド（実機）での動作は未確認。Play モードでは、台本 1 本を終わりまで通す事（行送り、早送り、入力の切り替え、文字の演出、Play の停止と再開）を確かめた（「10. 確かめた構成」）
+- 選択肢を出して選ぶ流れは、Play モードでも未確認
 - 台本の関数（`<<if f() >= 2>>` のような読み出し）を登録する `IActionRegistration.AddFunction` は、`ActionRegistration` が要る `Yarn.Dialogue` がコンテナに登録されていないので、解決できない
 - 話し手の名前（`LineViewContext.SpeakerName`）はいつも空。Yarn の `名前: 台詞` の書き方は、名前が台詞の中に混ざって出る
 - 台詞の文を ID で引く所（`ILineProvider`）と文字の解釈（`LineTextParser`）は Presenter の実装の側（`amenone.dialogue.adapter`）にあり、状態機械を通さずに台詞を 1 行だけ出す使い方には、抽象に出す直しが要る
 - 状態機械は「送りを待つ」前提で、自動送りは無い
-- `DialogueHolder.Start` は `StartDialogue` を発行してから `SetNode` と `Continue` を呼び、発行の結果を待たない。購読側がこの順に頼っている点は残る（Play モードでの影響は未確認）
+- `DialogueHolder.Start` はノードを決めてから `StartDialogue` を発行し、自分では `Continue` を呼ばない。最初の行へ進めるのは、`StartDialogue` を受けて `VMRunning` に入った状態機械（`VMRunningHandler`）。Presenter の状態機械を組まずに Logic だけで `Start` を呼んでも台本は進まないので、その時は `IDialogueContinuable.Continue()` を自分で呼ぶ
 - 選択肢を出している間（`WaitingForOptionSelection`）は命令が走らない
 - 2 つの対話を同時に走らせる形は未確認
 - 「3. 依存の一覧」の版より前の Unity・VContainer・MessagePipe での動作は未確認
@@ -328,8 +364,10 @@ public sealed class DialogueEndListener : IInitializable, IDisposable
 
   ```sh
   Unity -batchmode -nographics -projectPath <プロジェクト> -runTests -testPlatform EditMode \
-    -assemblyNames "amenone.dialogue.logic.tests;amenone.dialogue.messaging.tests" -testResults results.xml -logFile test.log
+    -assemblyNames "amenone.dialogue.logic.tests;amenone.dialogue.messaging.tests;amenone.dialogue.view.tests" -testResults results.xml -logFile test.log
   ```
+
+  `com.amenone.csharpextension` のテスト（`amenone.csharpextension.tests`）も回す時は、`Packages/manifest.json` の `"testables"` に `com.amenone.csharpextension` を足す
 
 - 版を上げる手順
   1. `package-version.txt`、`CHANGELOG.md`、この README の先頭の版を直す
@@ -338,10 +376,17 @@ public sealed class DialogueEndListener : IInitializable, IDisposable
 
 ## 10. 確かめた構成
 
-2.0.0 で、次の組み合わせのバッチモードで確かめた。
+2.0.0 で、次の組み合わせで確かめた（Play モードの確かめ以外はバッチモード）。
 
-- Unity 6000.7.0b1、VContainer 1.19.0、MessagePipe / MessagePipe.VContainer（コミット 3adc01d）、Yarn Spinner 3.2.8、com.unity.localization 2.0.0、com.unity.inputsystem 6.7.0、com.unity.ugui 2.7.0、com.unity.test-framework 1.9.0、AutoConstructor 5.6.0、FastEnum 1.8.0（NuGetForUnity は入れず、展開済みの `Assets/Packages/` を置いた）
-- Scripting Define Symbols は `RH_SerializedDictionaryPro;FORCE_YARNLOCALIZATION`
-- 新規に入れる形: 依存だけを入れたプロジェクトに `-importPackage` で入れ、全ファイルが `Assets/AmenoneDialogue/` に `.meta` を含めてバイト単位で同じに展開された。コンパイルの `error CS` 0、EditMode テスト 31 件が全件通った
-- 上書きで入れる形: 1.0.4 より後の未公開の版（VitalRouter 版）を `Assets/Scripts/` に置き、コンパイルが通る状態から入れた。増えたファイルも `Assets/Scripts/` の下に置かれた。入れた直後（VitalRouter を残したまま）と、VitalRouter を外した後のどちらも、`error CS` 0、EditMode テスト 31 件が全件通った。ゲームのコードの直し（「7. 旧版からの上げ方」の 3）は含まない
+- Unity 6000.7.0b1、VContainer 1.19.0、MessagePipe / MessagePipe.VContainer（コミット 3adc01d）、Yarn Spinner 3.2.8、com.unity.localization 2.0.0、com.unity.inputsystem 6.7.0、com.unity.ugui 2.7.0、com.unity.test-framework 1.9.0、AutoConstructor 5.6.0、FastEnum 1.8.0（NuGetForUnity は入れず、展開済みの `Assets/Packages/` を置いた）、com.amenone.csharpextension 0.1.5
+- Scripting Define Symbols は `FORCE_YARNLOCALIZATION`
+- 新規に入れる形: 依存だけを入れたプロジェクトに `-importPackage` で入れ、全ファイルが `Assets/AmenoneDialogue/` に `.meta` を含めてバイト単位で同じに展開された。コンパイルの `error CS` 0、EditMode テスト 33 件（Logic 9、通知 22、View 2）と csharpextension のテスト 11 件が全件通った
+- 上書きで入れる形: 1.0.4 より後の未公開の版（VitalRouter 版、`Tests/` を持たない物）を `Assets/Scripts/` に置き、コンパイルが通る状態から入れた
+  - そのまま入れると、根の直下に増えた物（`README.md`、`CHANGELOG.md`、`package-version.txt`、`Tests/`）が `Assets/AmenoneDialogue/` という別の木に置かれ、GUID の衝突のログが出た。コンパイルとテストは通った
+  - 入れる前に、Unity を閉じた状態で `Assets/Scripts` を `.meta` ごと `Assets/AmenoneDialogue` に移すと、衝突は出ず、全部が 1 つの木に入った
+  - そのまま入れた後に、Unity を閉じた状態で別の木の中身を `.meta` ごと `Assets/Scripts` の直下へ移し、空のフォルダとその `.meta` を消すと、開き直した時に衝突は出ず、全部が `Assets/Scripts` に入った
+  - どの形でも `error CS` 0、EditMode テスト 44 件（ライブラリ 33、csharpextension 11）が全件通った。VitalRouter を外した後もコンパイルとテストが通る事は、辞書の型を替える前の組み立てで確かめた
+- 実際のゲームのプロジェクトの複製に上書きで入れ、コンパイル、EditMode テスト、Play モードで台本 1 本を終わりまで（行送り、早送り、入力の切り替え、文字の演出、Play の停止と再開を 2 回）確かめた。選択肢を出して選ぶ流れは確かめていない
+- 辞書のアセット: 旧版の形（SerializableDictionary Pro）の YAML をそのまま読ませると、例外にならずに空の辞書になった。「7. 旧版からの上げ方」の手順で書き換えた YAML は、組の数とキーの並びのとおりに読めた（値の参照先はプロジェクトに無い物で確かめた）
+- `com.amenone.csharpextension` 0.1.5 は、Unity 2022.3.62f3 でも、このパッケージだけを入れたプロジェクトでコンパイルとテスト 11 件が通った
 - 親のスコープが `RegisterMessagePipe()` だけを呼んだ時（VContainer 1.19.0）、`RegisterDialogueMessaging()` が例外を投げず、`IAsyncPublisher<NodeStart>` が解決できた

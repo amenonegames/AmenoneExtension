@@ -29,9 +29,9 @@ namespace Logic
 
         public void Start(string nodeName)
         {
-            _eventPublisher.Publish(new DialogueEventMessage(DialogueEvent.StartDialogue),_tokenGettable.Get());
             _dialogue.SetNode(nodeName);
-            _dialogue.Continue();
+            // 最初の Continue は、StartDialogue を受けて VMRunning に入った状態機械が呼ぶ
+            _eventPublisher.Publish(new DialogueEventMessage(DialogueEvent.StartDialogue),_tokenGettable.Get());
         }
 
         public void Stop() => _dialogue.Stop();

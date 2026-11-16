@@ -6,6 +6,7 @@ using MessagePipe;
 using NUnit.Framework;
 using RootContainer;
 using VContainer;
+using CompilationPipeline = UnityEditor.Compilation.CompilationPipeline;
 
 namespace Messaging.Tests
 {
@@ -59,13 +60,14 @@ namespace Messaging.Tests
                 .ToArray();
 
         private static IEnumerable<Type> LibraryTypes() =>
-            AppDomain.CurrentDomain.GetAssemblies().Where(IsLibraryAssembly).SelectMany(LoadableTypes);
+            CompilationPipeline.GetAssemblies()
+                .Select(assembly => assembly.name)
+                .Where(IsLibraryAssemblyName)
+                .Select(Assembly.Load)
+                .SelectMany(LoadableTypes);
 
-        private static bool IsLibraryAssembly(Assembly assembly)
-        {
-            var name = assembly.GetName().Name;
-            return name.StartsWith("amenone.dialogue.") && !name.EndsWith(".tests");
-        }
+        private static bool IsLibraryAssemblyName(string name) =>
+            name.StartsWith("amenone.dialogue.") && !name.EndsWith(".tests");
 
         private static IEnumerable<Type> LoadableTypes(Assembly assembly)
         {

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using Identifier;
@@ -16,7 +17,9 @@ namespace Logic.Tests
 {
     public sealed class DialogueHolderTest
     {
-        private const string Script = "title: Start\n---\nHello\n===\n";
+        private const string Script =
+            "title: START\n---\nDefault first\nDefault second\n===\n" +
+            "title: Start\n---\nHello\nWorld\n===\n";
 
         private YarnProject _yarnProject;
         private CancellationTokenSource _dialogueLifetime;
@@ -58,6 +61,65 @@ namespace Logic.Tests
             _container.Resolve<DialogueHolder>().Start("Start");
 
             Assert.That(received, Is.EqualTo(new[] { (new DialogueEventMessage(DialogueEvent.StartDialogue), _dialogueLifetime.Token) }));
+        }
+
+        [Test]
+        public void Start_SubscriberContinuesOnStartDialogue_ShouldDeliverOnlyFirstLineWithoutException()
+        {
+            var holder = _container.Resolve<DialogueHolder>();
+            var thrown = new List<Exception>();
+            var deliveredLines = new List<string>();
+            using var continuation = ContinueOnStartDialogue(holder, thrown);
+            using var lines = CollectLineTexts(deliveredLines);
+
+            holder.Start("Start");
+
+            Assert.That(thrown, Is.Empty);
+            Assert.That(deliveredLines, Is.EqualTo(new[] { "Hello" }));
+        }
+
+        [Test]
+        public void StartWithoutNodeName_SubscriberContinuesOnStartDialogue_ShouldDeliverOnlyFirstLineOfStartNode()
+        {
+            var holder = _container.Resolve<DialogueHolder>();
+            var thrown = new List<Exception>();
+            var deliveredLines = new List<string>();
+            using var continuation = ContinueOnStartDialogue(holder, thrown);
+            using var lines = CollectLineTexts(deliveredLines);
+
+            holder.Start();
+
+            Assert.That(thrown, Is.Empty);
+            Assert.That(deliveredLines, Is.EqualTo(new[] { "Default first" }));
+        }
+
+        private IDisposable ContinueOnStartDialogue(IDialogueContinuable dialogue, List<Exception> thrown) =>
+            _container.Resolve<IAsyncSubscriber<DialogueEventMessage>>().Subscribe((message, _) =>
+            {
+                if (message.ev == DialogueEvent.StartDialogue) ContinueRecordingException(dialogue, thrown);
+                return UniTask.CompletedTask;
+            });
+
+        private static void ContinueRecordingException(IDialogueContinuable dialogue, List<Exception> thrown)
+        {
+            try
+            {
+                dialogue.Continue();
+            }
+            catch (Exception exception)
+            {
+                thrown.Add(exception);
+            }
+        }
+
+        private IDisposable CollectLineTexts(List<string> deliveredLines)
+        {
+            var lineTexts = CompiledYarnProject.LineTexts(Script);
+            return _container.Resolve<IAsyncSubscriber<DialogueLineEventMessage>>().Subscribe((message, _) =>
+            {
+                deliveredLines.Add(lineTexts[message.Context.LineData.LineId]);
+                return UniTask.CompletedTask;
+            });
         }
 
         private sealed class FixedTokenGettable : ITokenGettable

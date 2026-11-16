@@ -12,9 +12,10 @@
   - ブローカーの登録は `RootContainerBuilder` の `RegisterDialogueMessaging()` が行う。親のスコープに MessagePipe があればそれを使い、無ければ自分で `RegisterMessagePipe` を呼ぶ。ゲームのスコープで MessagePipe を使う時は、`RegisterMessagePipe` の戻り値の options を `RegisterDialogueMessageBrokers(options)` に渡す
 - 互換性の無い変更: Root の組み立ての asmdef の名前を `amenone.gon.rootcontainer` から `amenone.dialogue.root` に変えた（GUID は同じ）
 - 互換性の無い変更: 依存が変わった（1.0.4 との比較）
-  - 新しく要る: MessagePipe、MessagePipe.VContainer、LitMotionText（`com.amenone.litmotiontext`）、uPools、`com.amenone.unityextension`、Input System、Addressables（`com.unity.localization` が連れてくる物を直接参照する）、NuGet の FastEnum と AutoConstructor、Rotary Heart の SerializableDictionary Pro（Asset Store）
+  - 新しく要る: MessagePipe、MessagePipe.VContainer、LitMotionText（`com.amenone.litmotiontext`）、uPools、`com.amenone.unityextension`、Input System、Addressables（`com.unity.localization` が連れてくる物を直接参照する）、NuGet の FastEnum と AutoConstructor、`com.amenone.csharpextension` 0.1.5 以上（`SerializableDictionary<TKey, TValue>`）
   - 要らなくなった: VitalRouter（git パッケージと NuGet の DLL）
   - ソースジェネレータの DLL を同梱しなくなった。1.0.4 はライブラリのフォルダの中に `UnitGenerator.dll` と `View/Amenonegames.AutoComponentProperty.dll` を置いていた。2.0.0 は AutoComponentProperty だけを使い（利用側で入れる）、UnitGenerator は使わない
+- 辞書の型は `com.amenone.csharpextension` の `SerializableDictionary<TKey, TValue>`（`key` と `value` の組のリスト `pairs` で保存する）を使う（`TextVisualizePrefabIndex` の `SerializableDicGameObjPerTextVisualizeTag`、`OptionDictionary`）。Asset Store の有償アセットは要らない。1.0.4 より後の未公開の版は SerializableDictionary Pro を使っていたので、その形で保存したアセットは YAML の書き換えが要る（README の「7. 旧版からの上げ方」）
 - ScriptableObject の作成メニューを足した: 「Amenone Dialogue/Create Option Dictionary」（`OptionDictionary`）、「Amenone Dialogue/TextVisualizeTagPrefabIndex」（`TextVisualizePrefabIndex`）
 - 文字の演出を足した: 台詞の中の `<Twist>…</Twist>` のようなタグ（`TextVisualizeTag`）で、1 文字ずつの出方（Fall、Twist、Glitch、Melt、Sticky など約 25 種）を選べる。改行の `<br>` を扱う
 - View の組み立てに `TextVisualizePrefabIndex` が要るようになった。Sticky の演出のために `StickyPullSettings` とポインタの位置を読む部品を足した
@@ -24,4 +25,5 @@
 - 台本の変数を書く `IDialogueVariableWriter` を足した
 - 命令の省略できる引数を扱うようにした: 登録したメソッドの引数に省略時の値があれば、台本で省いた引数をその値で埋める（`CommandDispatcher`）
 - 選択肢の `Focus` / `UnFocus` で、`OptionViewBase` の UnityEvent（`focused` / `unfocused`）を呼ぶようにした
-- EditMode テストを足した（Logic 9 件、通知 22 件）
+- 会話を始めるたびに `DialogueException`（No node has been selected）が起きていたのを直した。`DialogueHolder.Start` はノードを決めてから `StartDialogue` を発行し、最初の `Continue` は状態機械に任せる。1.0.4 も同じ順序だったが、例外は表に出ていなかった。Presenter の状態機械を組まずに `Start` を呼んでいた場合は、台本が自動では進まなくなる
+- EditMode テストを足した（Logic 11 件、通知 22 件、View 2 件）
