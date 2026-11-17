@@ -27,3 +27,10 @@
 - 選択肢の `Focus` / `UnFocus` で、`OptionViewBase` の UnityEvent（`focused` / `unfocused`）を呼ぶようにした
 - 会話を始めるたびに `DialogueException`（No node has been selected）が起きていたのを直した。`DialogueHolder.Start` はノードを決めてから `StartDialogue` を発行し、最初の `Continue` は状態機械に任せる。1.0.4 も同じ順序だったが、例外は表に出ていなかった。Presenter の状態機械を組まずに `Start` を呼んでいた場合は、台本が自動では進まなくなる
 - EditMode テストを足した（Logic 11 件、通知 22 件、View 2 件）
+
+
+## [2.0.1] - 2026-11-17
+### Changes
+- 対話のスコープを破棄するたびに `ObjectDisposedException`（The semaphore has been disposed）がログに出る事があったのを直した。`NodeEnd` の購読の中でスコープを破棄するなど、状態の処理が走っている間に `DialogueStateQueue` が破棄されると、その処理が終わる時に起きていた。破棄の時に実行中だった処理は例外を出さずに終わり、順番を待っていた処理は実行されない
+- 上の直しを守る EditMode テストを 8 件足した（`DialogueStateQueueTest`。通知のテストのアセンブリは計 30 件、ライブラリ全体で 43 件）
+- README に、署名の無いパッケージの信頼度（Untrusted）の確認の画面で自動の取り込みが止まる事を書いた

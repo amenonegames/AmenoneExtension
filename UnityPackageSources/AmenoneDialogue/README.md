@@ -1,6 +1,6 @@
 # Amenone Dialogue System
 
-版: 2.0.0（`package-version.txt`）。変更の記録は `CHANGELOG.md`。
+版: 2.0.1（`package-version.txt`）。変更の記録は `CHANGELOG.md`。
 
 ## 1. これは何か
 
@@ -26,6 +26,7 @@
 
 1. 先に「3. 依存の一覧」の物を入れる（入れないと、取り込んだ直後にコンパイルが止まる）
 2. `.unitypackage` は https://github.com/amenonegames/AmenoneExtension の Releases に、タグ `dialogue/<版>` で置く（ファイル名 `AmenoneDialogue-<版>.unitypackage`）。取ったファイルを Unity の Assets > Import Package > Custom Package で入れる（バッチモードなら `-importPackage <パス>`）
+   - この `.unitypackage` には署名が無い。Unity の版によっては、開いている Editor で取り込む時に、署名の無いパッケージの信頼度（Untrusted）の確認の画面が出る。画面を人が進めるまで Editor のメインスレッドが止まるので、`AssetDatabase.ImportPackage` をスクリプトや外部のツールから呼ぶ自動の取り込みは、そこで応答が無くなる。人が画面で進めると取り込みは続く。バッチモードの `-importPackage`（Unity 6000.7.0b1）では画面は出なかった
 3. `Assets/AmenoneDialogue/` に展開される。`.meta` は同梱の物がそのまま使われ、GUID は変わらない
 
 ライブラリは Unity のパッケージ（UPM）ではなく `Assets/` の下のソースとして入る。利用側で書き換えてよい。書き換えた後に新しい版を入れると、書き換えは上書きされるので、どの版から書き換え始めたかを `package-version.txt` で控えておく。
@@ -278,6 +279,7 @@ public sealed class DialogueEndListener : IInitializable, IDisposable
 ### 2. 入れる
 
 - `.unitypackage` を入れる。辞書のアセットは、書き換えるまでインスペクタで触ったり保存したりしない
+- 開いている Editor で取り込むと、署名の無いパッケージの信頼度（Untrusted）の確認の画面が出る事がある。この画面は人の操作が要る。Editor を外部のツールから動かして取り込む時は、応答が無くなったらこの画面が出ていないかを見て、人が画面で進める（「2. 入れ方」）
 
 ### 3. 入れた後に
 
@@ -334,7 +336,8 @@ public sealed class DialogueEndListener : IInitializable, IDisposable
 
 - IL2CPP ビルドで MessagePipe のブローカーが生成できるか（AOT）は未確認
 - ビルド（実機）での動作は未確認。Play モードでは、台本 1 本を終わりまで通す事（行送り、早送り、入力の切り替え、文字の演出、Play の停止と再開）を確かめた（「10. 確かめた構成」）
-- 選択肢を出して選ぶ流れは、Play モードでも未確認
+- 対話のスコープは、会話の途中でも、`NodeEnd` の購読の中からでも破棄してよい。破棄の時に実行中だった状態の処理は最後まで走り、順番を待っていた処理は実行されない（2.0.0 は、この時に `ObjectDisposedException` をログに出していた）
+- 選択肢を出して選ぶ流れは、実際のゲームのプロジェクトの Play モードで、出て、選べて、選んだ先へ進む事を確かめた（2.0.0）。EditMode のテストは、選択肢のメッセージが届く所までを見ている
 - 台本の関数（`<<if f() >= 2>>` のような読み出し）を登録する `IActionRegistration.AddFunction` は、`ActionRegistration` が要る `Yarn.Dialogue` がコンテナに登録されていないので、解決できない
 - 話し手の名前（`LineViewContext.SpeakerName`）はいつも空。Yarn の `名前: 台詞` の書き方は、名前が台詞の中に混ざって出る
 - 台詞の文を ID で引く所（`ILineProvider`）と文字の解釈（`LineTextParser`）は Presenter の実装の側（`amenone.dialogue.adapter`）にあり、状態機械を通さずに台詞を 1 行だけ出す使い方には、抽象に出す直しが要る
@@ -352,7 +355,7 @@ public sealed class DialogueEndListener : IInitializable, IDisposable
 - `.unitypackage` の作り方（Python 3.10 以上の標準ライブラリだけ。Unity は要らない）:
 
   ```sh
-  python Tools/build_unitypackage.py --source UnityPackageSources/AmenoneDialogue --root Assets/AmenoneDialogue --output Build/AmenoneDialogue-2.0.0.unitypackage
+  python Tools/build_unitypackage.py --source UnityPackageSources/AmenoneDialogue --root Assets/AmenoneDialogue --output Build/AmenoneDialogue-2.0.1.unitypackage
   ```
 
   - `.meta` の無いファイル、対応するファイルの無い `.meta`、GUID の重複があると、エラーで止まる
@@ -376,7 +379,7 @@ public sealed class DialogueEndListener : IInitializable, IDisposable
 
 ## 10. 確かめた構成
 
-2.0.0 で、次の組み合わせで確かめた（Play モードの確かめ以外はバッチモード）。
+2.0.0 で、次の組み合わせで確かめた（Play モードの確かめ以外はバッチモード）。2.0.1 は、同じ組み合わせで、コンパイルの `error CS` 0 と、EditMode テスト 43 件（Logic 11、通知 30、View 2）と csharpextension のテスト 11 件が全件通る事を確かめた。2.0.1 で足した 8 件のうち 4 件は、2.0.0 の `DialogueStateQueue` では落ちる。
 
 - Unity 6000.7.0b1、VContainer 1.19.0、MessagePipe / MessagePipe.VContainer（コミット 3adc01d）、Yarn Spinner 3.2.8、com.unity.localization 2.0.0、com.unity.inputsystem 6.7.0、com.unity.ugui 2.7.0、com.unity.test-framework 1.9.0、AutoConstructor 5.6.0、FastEnum 1.8.0（NuGetForUnity は入れず、展開済みの `Assets/Packages/` を置いた）、com.amenone.csharpextension 0.1.5
 - Scripting Define Symbols は `FORCE_YARNLOCALIZATION`

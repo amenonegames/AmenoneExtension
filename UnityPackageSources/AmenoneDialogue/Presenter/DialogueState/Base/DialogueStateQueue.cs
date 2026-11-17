@@ -6,6 +6,7 @@ namespace Presenter.DialogueState.Base
 {
     public class DialogueStateQueue : IDisposable
     {
+        // 破棄の時に実行中の action が残っていても Release できるよう、セマフォ自体は Dispose しない
         private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
         private bool _disposed;
 
@@ -16,6 +17,7 @@ namespace Presenter.DialogueState.Base
             await _semaphore.WaitAsync(cancellationToken);
             try
             {
+                if (_disposed) return;
                 await action();
             }
             finally
@@ -31,6 +33,7 @@ namespace Presenter.DialogueState.Base
             await _semaphore.WaitAsync(cancellationToken);
             try
             {
+                if (_disposed) throw new OperationCanceledException();
                 return await func();
             }
             finally
@@ -47,13 +50,6 @@ namespace Presenter.DialogueState.Base
             }
         }
 
-        public void Dispose()
-        {
-            if (!_disposed)
-            {
-                _semaphore?.Dispose();
-                _disposed = true;
-            }
-        }
+        public void Dispose() => _disposed = true;
     }
 }
