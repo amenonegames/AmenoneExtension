@@ -1,0 +1,39 @@
+{
+    "name": "amenone.ecsbridge.tests",
+    "rootNamespace": "Amenone.EcsBridge.Tests",
+    "references": [
+        "amenone.ecsbridge",
+        "Unity.Entities",
+        "Unity.Entities.Hybrid",
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS",
+        "AMENONE_ECSBRIDGE_ENTITIES",
+        "AMENONE_ECSBRIDGE_VCONTAINER"
+    ],
+    "versionDefines": [
+        {
+            "name": "com.unity.entities",
+            "expression": "1.0.0",
+            "define": "AMENONE_ECSBRIDGE_ENTITIES"
+        },
+        {
+            "name": "jp.hadashikick.vcontainer",
+            "expression": "1.13.0",
+            "define": "AMENONE_ECSBRIDGE_VCONTAINER"
+        }
+    ],
+    "noEngineReferences": false
+}
