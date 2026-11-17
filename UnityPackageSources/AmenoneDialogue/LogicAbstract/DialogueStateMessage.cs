@@ -13,6 +13,7 @@ namespace LogicAbstract
     public readonly record struct InitializeDialogue;
     public readonly record struct NodeStart(NodeStartContext Context);
     public readonly record struct NodeEnd;
+    public readonly record struct DialogueFailed(System.Exception Exception);
 
     public readonly record struct DialogueOptionContext(LogicOptionData[] OptionData) : IDialogueContext;
 

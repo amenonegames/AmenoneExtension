@@ -1,6 +1,6 @@
 # Amenone Dialogue System
 
-版: 2.0.2（`package-version.txt`）。変更の記録は `CHANGELOG.md`。
+版: 2.1.0（`package-version.txt`）。変更の記録は `CHANGELOG.md`。
 
 ## 1. これは何か
 
@@ -277,6 +277,8 @@ public sealed class DialogueEndListener : IInitializable, IDisposable
 
 場面の始まりは `NodeStart`（`Context.NodeName`）で受けられる。
 
+Yarn の VM が例外を出して対話が止まった時（`<<jump>>` 先のノードが無いなど）は、`NodeEnd` は届かず、代わりに `DialogueFailed`（`Exception` を持つ）が 1 度発行される。例外はライブラリがログに出す。止まった対話を待ち続けないよう、`NodeEnd` を待つ側は `DialogueFailed` も購読する。受けた後は、`Stop` を呼んでから `IDialogueStartable.Start` で別のノードを始め直せる。命令の例外はライブラリが握って次へ進むので、`DialogueFailed` は出ない。
+
 購読（`IAsyncSubscriber<T>` を受け取る事）は Presenter のアセンブリで行う。上の `DialogueEndListener` も、ゲームの側の Presenter のアセンブリに置く。発行（`IAsyncPublisher<T>`）はどこからでもよい。メッセージがどこへ飛ぶかを、いつも Presenter を見れば追えるようにするためである。ライブラリの中はテスト（`SubscriberLocationTest`）が守っていて、ゲームの側は決まりとして守る。
 
 ### 送りと早送りをゲームのコードから起こす（`DialogueEventMessage`、`DialogueInterruptEventMessage`、`LogicAbstract`）
@@ -398,7 +400,7 @@ public sealed class AutoTextFeeder
 - `.unitypackage` の作り方（Python 3.10 以上の標準ライブラリだけ。Unity は要らない）:
 
   ```sh
-  python Tools/build_unitypackage.py --source UnityPackageSources/AmenoneDialogue --root Assets/AmenoneDialogue --output Build/AmenoneDialogue-2.0.2.unitypackage
+  python Tools/build_unitypackage.py --source UnityPackageSources/AmenoneDialogue --root Assets/AmenoneDialogue --output Build/AmenoneDialogue-2.1.0.unitypackage
   ```
 
   - `.meta` の無いファイル、対応するファイルの無い `.meta`、GUID の重複があると、エラーで止まる
@@ -422,7 +424,7 @@ public sealed class AutoTextFeeder
 
 ## 10. 確かめた構成
 
-2.0.0 で、次の組み合わせで確かめた（Play モードの確かめ以外はバッチモード）。2.0.1 は、同じ組み合わせで、コンパイルの `error CS` 0 と、EditMode テスト 43 件（Logic 11、通知 30、View 2）と csharpextension のテスト 11 件が全件通る事を確かめた。2.0.1 で足した 8 件のうち 4 件は、2.0.0 の `DialogueStateQueue` では落ちる。2.0.2 は、同じ組み合わせで、コンパイルの `error CS` 0 と、EditMode テスト 93 件（Logic 29、通知 62、View 2）と csharpextension のテスト 11 件が全件通る事を確かめた。2.0.2 で足した `DialogueStateHandlerCancellationTest` の 3 件は、2.0.1 の `DialogueStateHandlerBase` では落ちる。`DialogueStateQueue` の「順番が来た時に token がキャンセル済みなら実行しない」確かめと、`CommandDispatcher` の「命令の後に token を確かめる」行を外した写しでは、Logic と通知のテスト 91 件のうち 8 件が落ちる。2.0.2 の `.unitypackage` を、依存だけを入れたプロジェクトに `-importPackage` で入れ、全ファイルが `Assets/AmenoneDialogue/` に `.meta` を含めてバイト単位で同じに展開され、`error CS` 0 で、同じ 93 件と 11 件が全件通る事も確かめた。
+2.0.0 で、次の組み合わせで確かめた（Play モードの確かめ以外はバッチモード）。2.0.1 は、同じ組み合わせで、コンパイルの `error CS` 0 と、EditMode テスト 43 件（Logic 11、通知 30、View 2）と csharpextension のテスト 11 件が全件通る事を確かめた。2.0.1 で足した 8 件のうち 4 件は、2.0.0 の `DialogueStateQueue` では落ちる。2.0.2 は、同じ組み合わせで、コンパイルの `error CS` 0 と、EditMode テスト 93 件（Logic 29、通知 62、View 2）と csharpextension のテスト 11 件が全件通る事を確かめた。2.0.2 で足した `DialogueStateHandlerCancellationTest` の 3 件は、2.0.1 の `DialogueStateHandlerBase` では落ちる。`DialogueStateQueue` の「順番が来た時に token がキャンセル済みなら実行しない」確かめと、`CommandDispatcher` の「命令の後に token を確かめる」行を外した写しでは、Logic と通知のテスト 91 件のうち 8 件が落ちる。2.0.2 の `.unitypackage` を、依存だけを入れたプロジェクトに `-importPackage` で入れ、全ファイルが `Assets/AmenoneDialogue/` に `.meta` を含めてバイト単位で同じに展開され、`error CS` 0 で、同じ 93 件と 11 件が全件通る事も確かめた。2.1.0 は、同じ組み合わせで、コンパイルの `error CS` 0 と、EditMode テスト 96 件（Logic 32、通知 62、View 2）と csharpextension のテスト 11 件が全件通る事を確かめた。2.1.0 で足した `DialogueHolderTest` の 3 件のうち、VM が例外を出す時の 2 件は、`DialogueHolder.Continue` の `try`/`catch` を外した写しでは落ちる。
 
 - Unity 6000.7.0b1、VContainer 1.19.0、MessagePipe / MessagePipe.VContainer（コミット 3adc01d）、Yarn Spinner 3.2.8、com.unity.localization 2.0.0、com.unity.inputsystem 6.7.0、com.unity.ugui 2.7.0、com.unity.test-framework 1.9.0、AutoConstructor 5.6.0、FastEnum 1.8.0（NuGetForUnity は入れず、展開済みの `Assets/Packages/` を置いた）、com.amenone.csharpextension 0.1.5
 - Scripting Define Symbols は `FORCE_YARNLOCALIZATION`

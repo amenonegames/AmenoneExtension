@@ -28,6 +28,7 @@ namespace RootContainer
             builder.RegisterMessageBroker<InitializeDialogue>(options);
             builder.RegisterMessageBroker<NodeStart>(options);
             builder.RegisterMessageBroker<NodeEnd>(options);
+            builder.RegisterMessageBroker<DialogueFailed>(options);
             builder.RegisterMessageBroker<DialogueEventMessage>(options);
             builder.RegisterMessageBroker<DialogueInterruptEventMessage>(options);
             builder.RegisterMessageBroker<DialogueLineEventMessage>(options);

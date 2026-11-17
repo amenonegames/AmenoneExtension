@@ -8,6 +8,8 @@ using MessagePipe;
 using NUnit.Framework;
 using Root.Abstract;
 using RootContainer;
+using UnityEngine;
+using UnityEngine.TestTools;
 using VContainer;
 using Yarn;
 using Yarn.Unity;
@@ -19,7 +21,8 @@ namespace Logic.Tests
     {
         private const string Script =
             "title: START\n---\nDefault first\nDefault second\n===\n" +
-            "title: Start\n---\nHello\nWorld\n===\n";
+            "title: Start\n---\nHello\nWorld\n===\n" +
+            "title: Broken\n---\n<<jump {\"Missing\"}>>\n===\n";
 
         private YarnProject _yarnProject;
         private CancellationTokenSource _dialogueLifetime;
@@ -92,6 +95,63 @@ namespace Logic.Tests
             Assert.That(thrown, Is.Empty);
             Assert.That(deliveredLines, Is.EqualTo(new[] { "Default first" }));
         }
+
+        [Test]
+        public void Continue_VMThrows_ShouldLogTheExceptionAndPublishDialogueFailedOnce()
+        {
+            var holder = _container.Resolve<DialogueHolder>();
+            var failures = new List<DialogueFailed>();
+            using var failure = CollectFailures(failures);
+            LogAssert.Expect(LogType.Exception, new System.Text.RegularExpressions.Regex("."));
+
+            holder.Continue();
+
+            Assert.That(failures.Count, Is.EqualTo(1), "ノードを選ばずに Continue すると VM が投げる");
+            Assert.That(failures[0].Exception, Is.Not.Null);
+        }
+
+        [Test]
+        public void Continue_VMRunsNormally_ShouldNotPublishDialogueFailed()
+        {
+            var holder = _container.Resolve<DialogueHolder>();
+            var failures = new List<DialogueFailed>();
+            using var failure = CollectFailures(failures);
+            using var continuation = ContinueOnStartDialogue(holder, new List<Exception>());
+
+            holder.Start("Start");
+            holder.Continue();
+
+            Assert.That(failures, Is.Empty);
+        }
+
+        [Test]
+        public void Start_AfterTheVMThrewAndStop_ShouldDeliverTheFirstLineOfTheOtherNode()
+        {
+            var holder = _container.Resolve<DialogueHolder>();
+            var thrown = new List<Exception>();
+            var deliveredLines = new List<string>();
+            var failures = new List<DialogueFailed>();
+            using var continuation = ContinueOnStartDialogue(holder, thrown);
+            using var lines = CollectLineTexts(deliveredLines);
+            using var failure = CollectFailures(failures);
+            LogAssert.Expect(LogType.Exception, new System.Text.RegularExpressions.Regex("Missing"));
+            holder.Start("Broken");
+            Assert.That(failures.Count, Is.EqualTo(1), "無いノードへの jump で VM が投げる");
+
+            holder.Stop();
+            holder.Start("Start");
+
+            Assert.That(thrown, Is.Empty);
+            Assert.That(failures.Count, Is.EqualTo(1));
+            Assert.That(deliveredLines, Is.EqualTo(new[] { "Hello" }));
+        }
+
+        private IDisposable CollectFailures(List<DialogueFailed> failures) =>
+            _container.Resolve<IAsyncSubscriber<DialogueFailed>>().Subscribe((message, _) =>
+            {
+                failures.Add(message);
+                return UniTask.CompletedTask;
+            });
 
         private IDisposable ContinueOnStartDialogue(IDialogueContinuable dialogue, List<Exception> thrown) =>
             _container.Resolve<IAsyncSubscriber<DialogueEventMessage>>().Subscribe((message, _) =>

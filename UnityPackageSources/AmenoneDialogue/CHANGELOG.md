@@ -58,3 +58,13 @@
 - README の「6. ゲーム側からの拡張点」に、送りと早送りをゲームのコードから起こす方法を書いた
 - 決まりを足した: MessagePipe の購読（subscriber 系の interface を受け取る事）は Presenter のアセンブリ（`amenone.dialogue.presenter`）だけで行う。発行は縛らない。ライブラリの中は `SubscriberLocationTest` が、Presenter 以外のアセンブリの型がコンストラクタの引数・`[Inject]` のメソッドの引数・フィールド・プロパティで subscriber を持たない事を確かめる（README の「6. ゲーム側からの拡張点」）
 - EditMode テストを 50 件足した（`CancellationTokenHolderTest` 5、`DialogueStateQueueCancellationTest` 16、`DialogueStateHandlerCancellationTest` 5、`CommandRunningHandlerCancellationTest` 3、`SubscriberLocationTest` 3、`CommandDispatcherCancellationTest` 18。Logic のテストのアセンブリは計 29 件、通知のテストのアセンブリは計 62 件、ライブラリ全体で 93 件）
+
+
+## [2.1.0] - 2026-11-17
+### Changes
+- 失敗の通知 `DialogueFailed`（`LogicAbstract`）を足した。`DialogueHolder.Continue` の中で Yarn の VM が例外を出した時（`<<jump>>` 先のノードが無いなど）に、例外をログに出してから 1 度発行する。今までは例外が状態の処理の外へ抜け、`NodeEnd` も届かずに対話が止まったままになり、ゲームの側が気づく口が無かった
+  - 発行した後の対話は止まったまま。続けるかどうかはゲームの側が決める（`IDialogueStartable.Start` で始め直すか、閉じる）。`Stop` を呼んだ後に `Start` で別のノードを始め直せる（その最初の行が届き、`DialogueFailed` は増えない事をテストで確かめている）
+  - 命令（`CommandDispatcher`）の例外は今までどおりエラーのログに出して握り、対話は次へ進む。`DialogueFailed` は出ない
+  - `RegisterDialogueMessageBrokers` が `DialogueFailed` のブローカーも登録する。`RegisterDialogueMessageBrokers` を使わずにブローカーを自分で登録している場合は、`DialogueFailed` の登録も要る
+- 互換性の無い変更: `DialogueHolder` のコンストラクタの引数に `IAsyncPublisher<DialogueFailed>` が増えた（`eventPublisher` と `TokenGettable` の間）。コンテナ（`LogicContainerBuilder`）に作らせている場合は直しは要らない。自分で `new` している場合は引数を足す
+- EditMode テストを 3 件足した（`DialogueHolderTest`。Logic のテストのアセンブリは計 32 件、ライブラリ全体で 96 件）
