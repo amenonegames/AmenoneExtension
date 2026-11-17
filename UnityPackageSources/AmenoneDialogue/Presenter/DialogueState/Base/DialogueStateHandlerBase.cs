@@ -19,10 +19,10 @@ namespace Presenter.DialogueState.Base
 
         public UniTask HandleAsync(CancellationToken token)
         {
-            return Queue.EnqueueAsync(async () =>
+            return Queue.EnqueueAsync(async queueToken =>
             {
                 StateHolder.Transition(State);
-                await OnEnterState(token);
+                await OnEnterState(queueToken);
             }, token);
         }
 
@@ -57,10 +57,10 @@ namespace Presenter.DialogueState.Base
 
         public UniTask HandleAsync(TContext context, CancellationToken token)
         {
-            return Queue.EnqueueAsync(async () =>
+            return Queue.EnqueueAsync(async queueToken =>
             {
                 StateHolder.Transition(State);
-                await OnEnterState(context, token);
+                await OnEnterState(context, queueToken);
             }, token);
         }
 

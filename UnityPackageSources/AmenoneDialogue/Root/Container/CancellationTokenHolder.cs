@@ -1,14 +1,32 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using Root.Abstract;
 
 namespace RootContainer
 {
-    public class CancellationTokenHolder : ITokenGettable
+    public class CancellationTokenHolder : ITokenGettable, IDisposable
     {
-        private CancellationToken _cancellationToken;
-        public CancellationToken Get()
+        private readonly CancellationTokenSource _source = new CancellationTokenSource();
+        // Dispose の後に Get() されても ObjectDisposedException にならないよう、作った時に取っておく
+        private readonly CancellationToken _token;
+        private bool _disposed;
+
+        public CancellationTokenHolder() => _token = _source.Token;
+
+        public CancellationToken Get() => _token;
+
+        public void Dispose()
         {
-            return _cancellationToken;
+            if (_disposed) return;
+            _disposed = true;
+            try
+            {
+                _source.Cancel();
+            }
+            finally
+            {
+                _source.Dispose();
+            }
         }
     }
 }

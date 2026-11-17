@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using LogicAbstract;
@@ -30,7 +31,8 @@ namespace Logic
             public MethodInfo Method { get; }
             public object Target { get; }
             public ParameterInfo[] Parameters { get; }
-            private int RequiredParameterCount { get; }
+            private ParameterInfo[] ScriptParameters { get; }
+            private int RequiredScriptParameterCount { get; }
 
             public CommandRegistration(string name, MethodInfo method, object target)
             {
@@ -38,12 +40,15 @@ namespace Logic
                 Method = method;
                 Target = target;
                 Parameters = method.GetParameters();
-                RequiredParameterCount = Parameters.Count(parameter => !parameter.HasDefaultValue);
+                ScriptParameters = Parameters.Where(parameter => !IsCancellationToken(parameter)).ToArray();
+                RequiredScriptParameterCount = ScriptParameters.Count(parameter => !parameter.HasDefaultValue);
             }
+
+            private static bool IsCancellationToken(ParameterInfo parameter) => parameter.ParameterType == typeof(CancellationToken);
 
             public async UniTask InvokeAsync(string[] args, CancellationToken cancellationToken)
             {
-                var convertedArgs = ConvertArguments(args);
+                var convertedArgs = ConvertArguments(args, cancellationToken);
                 var result = Method.Invoke(Target, convertedArgs);
 
                 if (result is UniTask unitask)
@@ -61,21 +66,30 @@ namespace Logic
                 }
             }
 
-            private object[] ConvertArguments(string[] args)
+            private object[] ConvertArguments(string[] args, CancellationToken cancellationToken)
             {
-                if (args.Length < RequiredParameterCount || args.Length > Parameters.Length)
+                if (args.Length < RequiredScriptParameterCount || args.Length > ScriptParameters.Length)
                 {
                     throw new ArgumentException(
-                        $"Command '{Name}' expects {RequiredParameterCount} to {Parameters.Length} arguments, but {args.Length} were provided.");
+                        $"Command '{Name}' expects {RequiredScriptParameterCount} to {ScriptParameters.Length} arguments, but {args.Length} were provided.");
                 }
 
-                // 省かれた引数は、登録したメソッドの省略時の値で埋める
+                // CancellationToken の引数は台本に書かせず、Dispatch に渡された token で埋める。省かれた引数は、登録したメソッドの省略時の値で埋める
                 var convertedArgs = new object[Parameters.Length];
+                var scriptArgIndex = 0;
                 for (int i = 0; i < Parameters.Length; i++)
                 {
-                    convertedArgs[i] = i < args.Length
-                        ? ConvertArgument(args[i], Parameters[i].ParameterType, Parameters[i].Name)
-                        : Parameters[i].DefaultValue;
+                    var parameter = Parameters[i];
+                    if (IsCancellationToken(parameter))
+                    {
+                        convertedArgs[i] = cancellationToken;
+                        continue;
+                    }
+
+                    convertedArgs[i] = scriptArgIndex < args.Length
+                        ? ConvertArgument(args[scriptArgIndex], parameter.ParameterType, parameter.Name)
+                        : parameter.DefaultValue;
+                    scriptArgIndex++;
                 }
 
                 return convertedArgs;
@@ -283,11 +297,21 @@ namespace Logic
             {
                 await registration.InvokeAsync(args, cancellationToken);
             }
-            catch (Exception ex)
+            catch (TargetInvocationException ex) when (IsCancellation(ex.InnerException, cancellationToken))
+            {
+                ExceptionDispatchInfo.Capture(ex.InnerException).Throw();
+            }
+            catch (Exception ex) when (!IsCancellation(ex, cancellationToken))
             {
                 Debug.LogError($"Error executing command '{commandName}': {ex.Message}\n{ex.StackTrace}");
             }
+
+            // token を見ない命令は最後まで走るので、終わった後にここで止め、次の状態へ進ませない
+            cancellationToken.ThrowIfCancellationRequested();
         }
+
+        private static bool IsCancellation(Exception exception, CancellationToken cancellationToken)
+            => exception is OperationCanceledException && cancellationToken.IsCancellationRequested;
 
         private string[] ParseCommand(string command)
         {

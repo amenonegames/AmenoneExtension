@@ -1,3 +1,4 @@
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
@@ -6,9 +7,9 @@ namespace Logic
     public class DefaultYarnCommands
     {
         [YarnCommand("wait")]
-        public async UniTask Wait(float seconds)
+        public async UniTask Wait(float seconds, CancellationToken token = default)
         {
-            await UniTask.Delay((int)(seconds * 1000));
+            await UniTask.Delay((int)(seconds * 1000), cancellationToken: token);
         }
 
         [YarnCommand("log")]

@@ -1,6 +1,6 @@
 # Amenone Dialogue System
 
-版: 2.0.1（`package-version.txt`）。変更の記録は `CHANGELOG.md`。
+版: 2.0.2（`package-version.txt`）。変更の記録は `CHANGELOG.md`。
 
 ## 1. これは何か
 
@@ -198,6 +198,22 @@ public sealed class AudioCommands
 
 登録は組み立ての後に行う（例: `builder.RegisterBuildCallback(r => r.Resolve<AudioCommands>().RegisterCommands());`）。
 
+対話のスコープの破棄で命令を止めたい時は、`CancellationToken` 型の引数を足す。状態の処理の token が入り、台本の側は引数が増えない（`<<fade_in 0.5>>` のまま）。位置はどこでもよく、引数の数の検査とエラーの文の数は `CancellationToken` を除いて数える。
+
+```csharp
+public sealed class FadeCommands
+{
+    [YarnCommand("fade_in")]                                                   // <<fade_in 0.5>>
+    public async UniTask FadeInAsync(float seconds, CancellationToken token)
+    {
+        await UniTask.Delay(TimeSpan.FromSeconds(seconds), cancellationToken: token);
+    }
+}
+// 登録: _commands.RegisterCommandsFromInstance(new FadeCommands());
+```
+
+`RegisterCommandHandler` のラムダでも同じに受けられる（`_commands.RegisterCommandHandler<float, CancellationToken>("fade_in", (seconds, token) => ...)`）。`RegisterCommandHandler` の型引数は 4 つまでなので、token を受けるラムダの台本の引数は 3 つまで。それより多い時は `[YarnCommand]` のメソッドで書く（`RegisterCommandsFromInstance` か `RegisterStaticCommands` で登録する。Yarn Spinner の解析器が、`[YarnCommand]` のメソッドを public の型に置く事を求める）。token のキャンセルで止まった命令はエラーのログを出さない。
+
 ### 表示の拡張（`LineDisplayExtensions`、`ViewAbstract`）
 
 Root に 1 つだけある。子のスコープで登録した物は親から見えないので、ゲームの組み立ての `RegisterBuildCallback` で解決して足す。
@@ -260,6 +276,30 @@ public sealed class DialogueEndListener : IInitializable, IDisposable
 ```
 
 場面の始まりは `NodeStart`（`Context.NodeName`）で受けられる。
+
+購読（`IAsyncSubscriber<T>` を受け取る事）は Presenter のアセンブリで行う。上の `DialogueEndListener` も、ゲームの側の Presenter のアセンブリに置く。発行（`IAsyncPublisher<T>`）はどこからでもよい。メッセージがどこへ飛ぶかを、いつも Presenter を見れば追えるようにするためである。ライブラリの中はテスト（`SubscriberLocationTest`）が守っていて、ゲームの側は決まりとして守る。
+
+### 送りと早送りをゲームのコードから起こす（`DialogueEventMessage`、`DialogueInterruptEventMessage`、`LogicAbstract`）
+
+同梱のボタンは、押された時に次のメッセージを `IAsyncPublisher<…>` の `Publish` で発行している。同じメッセージをゲームのコードから発行すれば、自前の入力や自動送りから送りと早送りを起こせる。`IAsyncPublisher<…>` は `RootContainerBuilder` の子孫から解決できる。
+
+| 操作 | メッセージ | 発行している同梱の部品 |
+|---|---|---|
+| 送り | `new DialogueEventMessage(DialogueEvent.TextFeedProvided)` | `View/Button/TextFeedButton.cs` |
+| 早送り | `new DialogueInterruptEventMessage(DialogueInterruptEvent.FastForwardRequested)` | `View/Button/FastForwardButton.cs` |
+
+```csharp
+public sealed class AutoTextFeeder
+{
+    private readonly IAsyncPublisher<DialogueEventMessage> _dialogueEvent;
+
+    public AutoTextFeeder(IAsyncPublisher<DialogueEventMessage> dialogueEvent) => _dialogueEvent = dialogueEvent;
+
+    public void Feed() => _dialogueEvent.Publish(new DialogueEventMessage(DialogueEvent.TextFeedProvided));
+}
+```
+
+状態に合わないメッセージは受け付けられず、警告のログが出る（送りは `DialogueStateHolder.CanTransition` が `WaitingForTextFeed` の時だけ、早送りは `DialogueStateHolder.CanHandleInterrupt` が `VisualizingLine` の時だけ受け付ける）。
 
 ### そのほか
 
@@ -336,7 +376,10 @@ public sealed class DialogueEndListener : IInitializable, IDisposable
 
 - IL2CPP ビルドで MessagePipe のブローカーが生成できるか（AOT）は未確認
 - ビルド（実機）での動作は未確認。Play モードでは、台本 1 本を終わりまで通す事（行送り、早送り、入力の切り替え、文字の演出、Play の停止と再開）を確かめた（「10. 確かめた構成」）
-- 対話のスコープは、会話の途中でも、`NodeEnd` の購読の中からでも破棄してよい。破棄の時に実行中だった状態の処理は最後まで走り、順番を待っていた処理は実行されない（2.0.0 は、この時に `ObjectDisposedException` をログに出していた）
+- 対話のスコープは、会話の途中でも、`NodeEnd` の購読の中からでも破棄してよい。破棄の時に実行中だった状態の処理は、受けた token のキャンセルで止まり、順番を待っていた処理は実行されない。Root のスコープ（`RootContainerBuilder`）を破棄した時も、実行中の状態の処理の token はキャンセルされる（2.0.1 は実行中の処理が最後まで走っていた。2.0.0 は、この時に `ObjectDisposedException` をログに出していた）
+  - token を受けない命令は、スコープを破棄しても最後まで走る。終わった後、次の状態へは進まない（`CommandExecuteFinish` を発行しない）。`<<wait>>` と、`CancellationToken` を受ける命令は止まる（「6. ゲーム側からの拡張点」の「命令の登録」）
+  - キャンセルの継続（`await` の続き、`token.Register` の処理）は、スコープの `Dispose` の中で同期で走る
+  - View のスコープだけを先に破棄して Presenter のスコープを残した時は、token はキャンセルされず、実行中の処理は止まらない。View を破棄する時は Presenter のスコープも一緒に破棄する
 - 選択肢を出して選ぶ流れは、実際のゲームのプロジェクトの Play モードで、出て、選べて、選んだ先へ進む事を確かめた（2.0.0）。EditMode のテストは、選択肢のメッセージが届く所までを見ている
 - 台本の関数（`<<if f() >= 2>>` のような読み出し）を登録する `IActionRegistration.AddFunction` は、`ActionRegistration` が要る `Yarn.Dialogue` がコンテナに登録されていないので、解決できない
 - 話し手の名前（`LineViewContext.SpeakerName`）はいつも空。Yarn の `名前: 台詞` の書き方は、名前が台詞の中に混ざって出る
@@ -355,7 +398,7 @@ public sealed class DialogueEndListener : IInitializable, IDisposable
 - `.unitypackage` の作り方（Python 3.10 以上の標準ライブラリだけ。Unity は要らない）:
 
   ```sh
-  python Tools/build_unitypackage.py --source UnityPackageSources/AmenoneDialogue --root Assets/AmenoneDialogue --output Build/AmenoneDialogue-2.0.1.unitypackage
+  python Tools/build_unitypackage.py --source UnityPackageSources/AmenoneDialogue --root Assets/AmenoneDialogue --output Build/AmenoneDialogue-2.0.2.unitypackage
   ```
 
   - `.meta` の無いファイル、対応するファイルの無い `.meta`、GUID の重複があると、エラーで止まる
@@ -379,7 +422,7 @@ public sealed class DialogueEndListener : IInitializable, IDisposable
 
 ## 10. 確かめた構成
 
-2.0.0 で、次の組み合わせで確かめた（Play モードの確かめ以外はバッチモード）。2.0.1 は、同じ組み合わせで、コンパイルの `error CS` 0 と、EditMode テスト 43 件（Logic 11、通知 30、View 2）と csharpextension のテスト 11 件が全件通る事を確かめた。2.0.1 で足した 8 件のうち 4 件は、2.0.0 の `DialogueStateQueue` では落ちる。
+2.0.0 で、次の組み合わせで確かめた（Play モードの確かめ以外はバッチモード）。2.0.1 は、同じ組み合わせで、コンパイルの `error CS` 0 と、EditMode テスト 43 件（Logic 11、通知 30、View 2）と csharpextension のテスト 11 件が全件通る事を確かめた。2.0.1 で足した 8 件のうち 4 件は、2.0.0 の `DialogueStateQueue` では落ちる。2.0.2 は、同じ組み合わせで、コンパイルの `error CS` 0 と、EditMode テスト 93 件（Logic 29、通知 62、View 2）と csharpextension のテスト 11 件が全件通る事を確かめた。2.0.2 で足した `DialogueStateHandlerCancellationTest` の 3 件は、2.0.1 の `DialogueStateHandlerBase` では落ちる。`DialogueStateQueue` の「順番が来た時に token がキャンセル済みなら実行しない」確かめと、`CommandDispatcher` の「命令の後に token を確かめる」行を外した写しでは、Logic と通知のテスト 91 件のうち 8 件が落ちる。2.0.2 の `.unitypackage` を、依存だけを入れたプロジェクトに `-importPackage` で入れ、全ファイルが `Assets/AmenoneDialogue/` に `.meta` を含めてバイト単位で同じに展開され、`error CS` 0 で、同じ 93 件と 11 件が全件通る事も確かめた。
 
 - Unity 6000.7.0b1、VContainer 1.19.0、MessagePipe / MessagePipe.VContainer（コミット 3adc01d）、Yarn Spinner 3.2.8、com.unity.localization 2.0.0、com.unity.inputsystem 6.7.0、com.unity.ugui 2.7.0、com.unity.test-framework 1.9.0、AutoConstructor 5.6.0、FastEnum 1.8.0（NuGetForUnity は入れず、展開済みの `Assets/Packages/` を置いた）、com.amenone.csharpextension 0.1.5
 - Scripting Define Symbols は `FORCE_YARNLOCALIZATION`

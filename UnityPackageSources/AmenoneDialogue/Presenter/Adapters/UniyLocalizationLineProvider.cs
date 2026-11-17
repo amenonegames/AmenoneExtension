@@ -24,12 +24,30 @@ namespace Presenter.Adapters
 
         public async void Initialize()
         {
-            await RefreshLocale(_tokenGettable.Get() , "ja");
+            try
+            {
+                await RefreshLocale(_tokenGettable.Get() , "ja");
+            }
+            catch (OperationCanceledException)
+            {
+            }
         }
 
         public async UniTask RefreshLocale(CancellationToken token , string localeCode)
         {
             _localeReloading  = true;
+            try
+            {
+                await SwitchLocale(token, localeCode);
+            }
+            finally
+            {
+                _localeReloading = false;
+            }
+        }
+
+        private async UniTask SwitchLocale(CancellationToken token , string localeCode)
+        {
             var locale = LocalizationSettings.AvailableLocales.Locales.Find((x) => x.Identifier.Code == localeCode);
             LocalizationSettings.SelectedLocale =  locale;
 
@@ -42,7 +60,6 @@ namespace Presenter.Adapters
             if (locale == null)
             {
                 Debug.LogError("Failed to get selected locale after initialization.");
-                _localeReloading = false;
                 return;
             }
 
@@ -61,7 +78,6 @@ namespace Presenter.Adapters
             if (!handle.IsDone)
             {
                 Debug.LogError($"Timeout loading StringTable '{StringTableName}'.");
-                _localeReloading = false;
                 return;
             }
 
@@ -79,8 +95,6 @@ namespace Presenter.Adapters
             {
                 Debug.Log($"Successfully loaded StringTable '{StringTableName}' with {_stringTable.Count} entries.");
             }
-
-            _localeReloading  = false;
         }
 
         public async UniTask<LocalizeLine> GetDialogueLine(string lineId, string[] substitutions , CancellationToken token)

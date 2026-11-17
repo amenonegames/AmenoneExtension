@@ -174,6 +174,7 @@ namespace Messaging.Tests
             _presenterScope = _root.CreateScope(builder =>
             {
                 builder.Register<DialogueStateQueue>(Lifetime.Singleton);
+                builder.Register<CancellationTokenHolder>(Lifetime.Singleton).AsImplementedInterfaces();
                 builder.RegisterInstance(new NextStateFixedHolder()).As<IDialogueStateHolder>();
                 builder.Register(resolver =>
                 {
