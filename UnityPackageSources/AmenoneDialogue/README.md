@@ -48,7 +48,7 @@ git の依存はコミットの hash で固定した例（「10. 確かめた構
 ```json
 {
   "dependencies": {
-    "com.amenone.csharpextension": "https://github.com/amenonegames/AmenoneExtension.git?path=/Packages/com.amenone.csharpextension",
+    "com.amenone.csharpextension": "https://github.com/amenonegames/AmenoneExtension.git?path=/Packages/com.amenone.csharpextension#d966d0e7d47e55fa76565cafe784643a3bb5b8c1",
     "com.amenone.unityextension": "https://github.com/amenonegames/AmenoneExtension.git?path=/Packages/com.amenone.unityextension#1ec3f5553fb72cab03f758bef9a89070fd8e44be",
     "com.amenone.vcontainerextensions": "https://github.com/amenonegames/AmenoneExtension.git?path=/Packages/com.amenone.vcontainerextensions#1ec3f5553fb72cab03f758bef9a89070fd8e44be",
     "com.amenone.litmotiontext": "https://github.com/amenonegames/LitMotionText.git?path=/Assets/LitMotionText#c32ed88afbdc961b5ed1232a6b5020b8cbe2e092",
@@ -75,7 +75,7 @@ git の依存はコミットの hash で固定した例（「10. 確かめた構
 }
 ```
 
-- `com.amenone.csharpextension` は 0.1.5 以上が要る（`SerializableDictionary<TKey, TValue>` を使う）。行は上のとおり版を書かない形のままでよいが、版は `Packages/packages-lock.json` の hash で固定される。lock の hash が 0.1.5 より古いと新しい型が無く、`TextVisualizePrefabIndex` などがコンパイルエラーになるので、Package Manager の Update を押すか、lock の `com.amenone.csharpextension` の塊を消して開き直し、パッケージを新しくする
+- `com.amenone.csharpextension` は 0.1.5 以上が要る（`SerializableDictionary<TKey, TValue>` を使う）。上の例の hash は 0.1.5 を含むコミット。行に hash を書かない形で入れているプロジェクトでは、版は `Packages/packages-lock.json` の hash で固定される。lock の hash が 0.1.5 より古いと新しい型が無く、`TextVisualizePrefabIndex` などがコンパイルエラーになるので、Package Manager の Update を押すか、lock の `com.amenone.csharpextension` の塊を消して開き直し、パッケージを新しくする
 - VContainer は OpenUPM から入れるので、`scopedRegistries` の項目も要る（既にあれば `scopes` に `jp.hadashikick.vcontainer` を足す）
 - `com.unity.addressables` はライブラリが直接参照するが、`com.unity.localization` が連れてくるので、manifest に書かなくてよい
 - `com.unity.test-framework` は、ライブラリの EditMode テストを回す時だけ要る
@@ -380,7 +380,7 @@ public sealed class DialogueEndListener : IInitializable, IDisposable
 
 - Unity 6000.7.0b1、VContainer 1.19.0、MessagePipe / MessagePipe.VContainer（コミット 3adc01d）、Yarn Spinner 3.2.8、com.unity.localization 2.0.0、com.unity.inputsystem 6.7.0、com.unity.ugui 2.7.0、com.unity.test-framework 1.9.0、AutoConstructor 5.6.0、FastEnum 1.8.0（NuGetForUnity は入れず、展開済みの `Assets/Packages/` を置いた）、com.amenone.csharpextension 0.1.5
 - Scripting Define Symbols は `FORCE_YARNLOCALIZATION`
-- 新規に入れる形: 依存だけを入れたプロジェクトに `-importPackage` で入れ、全ファイルが `Assets/AmenoneDialogue/` に `.meta` を含めてバイト単位で同じに展開された。コンパイルの `error CS` 0、EditMode テスト 33 件（Logic 9、通知 22、View 2）と csharpextension のテスト 11 件が全件通った
+- 新規に入れる形: 依存だけを入れたプロジェクトに `-importPackage` で入れ、全ファイルが `Assets/AmenoneDialogue/` に `.meta` を含めてバイト単位で同じに展開された。コンパイルの `error CS` 0、EditMode テスト 35 件（Logic 11、通知 22、View 2）と csharpextension のテスト 11 件が全件通った
 - 上書きで入れる形: 1.0.4 より後の未公開の版（VitalRouter 版、`Tests/` を持たない物）を `Assets/Scripts/` に置き、コンパイルが通る状態から入れた
   - そのまま入れると、根の直下に増えた物（`README.md`、`CHANGELOG.md`、`package-version.txt`、`Tests/`）が `Assets/AmenoneDialogue/` という別の木に置かれ、GUID の衝突のログが出た。コンパイルとテストは通った
   - 入れる前に、Unity を閉じた状態で `Assets/Scripts` を `.meta` ごと `Assets/AmenoneDialogue` に移すと、衝突は出ず、全部が 1 つの木に入った
