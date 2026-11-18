@@ -68,3 +68,10 @@
   - `RegisterDialogueMessageBrokers` が `DialogueFailed` のブローカーも登録する。`RegisterDialogueMessageBrokers` を使わずにブローカーを自分で登録している場合は、`DialogueFailed` の登録も要る
 - 互換性の無い変更: `DialogueHolder` のコンストラクタの引数に `IAsyncPublisher<DialogueFailed>` が増えた（`eventPublisher` と `TokenGettable` の間）。コンテナ（`LogicContainerBuilder`）に作らせている場合は直しは要らない。自分で `new` している場合は引数を足す
 - EditMode テストを 3 件足した（`DialogueHolderTest`。Logic のテストのアセンブリは計 32 件、ライブラリ全体で 96 件）
+
+
+## [2.1.1] - 2026-11-18
+### Changes
+- `<<wait>>` を `[YarnCommand]` でなく `RegisterCommandHandler` で登録するようにした（`DefaultYarnCommands.RegisterTo`）。Yarn Spinner for Unity のソースジェネレータは、名前が `YarnCommandAttribute` の属性を付けたメソッドから言語サーバー用の命令の一覧（`ProjectSettings/Packages/dev.yarnspinner/<アセンブリ名>-generated.ysls.json`）を作り、2.0.2 で `Wait` に足した `CancellationToken` の引数を Yarn の型でないと見て、`wait` を `containsErrors: true` にしていた（コンパイルの警告 `YS1011`）。`amenone.dialogue.logic` の一覧には `wait` が載らなくなる。台本の書き方（`<<wait 1>>`）と、token のキャンセルで止まる動きは変わらない
+- 互換性の注意: `DefaultYarnCommands.Wait` の署名は変わらないが、属性が外れたので、`RegisterCommandsFromInstance(new DefaultYarnCommands())` では `wait` が登録されなくなった。自分でそう登録している場合は `new DefaultYarnCommands().RegisterTo(dispatcher)` に替える。`LogicContainerBuilder` に作らせている場合は直しは要らない
+- README の「6. ゲーム側からの拡張点」に、token を受ける命令で一覧をきれいに保つ書き方を、「8. 既知の制限と未確認の事」に、一覧が作られる仕組みと、テストのアセンブリの一覧（`amenone.dialogue.logic.tests-generated.ysls.json`）が作られる事を書いた

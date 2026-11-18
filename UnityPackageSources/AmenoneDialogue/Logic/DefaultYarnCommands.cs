@@ -6,7 +6,13 @@ namespace Logic
 {
     public class DefaultYarnCommands
     {
-        [YarnCommand("wait")]
+        public void RegisterTo(CommandDispatcher dispatcher)
+        {
+            dispatcher.RegisterCommandsFromInstance(this);
+            // wait は [YarnCommand] にしない。Yarn Spinner のソースジェネレータが名前の同じ属性を拾い、CancellationToken の引数を Yarn の型でないと見て、言語サーバー用の命令の一覧（ysls.json）で containsErrors にするため
+            dispatcher.RegisterCommandHandler<float, CancellationToken>("wait", Wait);
+        }
+
         public async UniTask Wait(float seconds, CancellationToken token = default)
         {
             await UniTask.Delay((int)(seconds * 1000), cancellationToken: token);

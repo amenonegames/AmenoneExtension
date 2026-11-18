@@ -35,8 +35,7 @@ namespace Logic
             builder.Register<CommandDispatcher>(resolver =>
             {
                 var dispatcher = new CommandDispatcher();
-                var defaultCommands = new DefaultYarnCommands();
-                dispatcher.RegisterCommandsFromInstance(defaultCommands);
+                new DefaultYarnCommands().RegisterTo(dispatcher);
                 return dispatcher;
             }, Lifetime.Singleton).AsImplementedInterfaces().AsSelf();
 

@@ -1,6 +1,6 @@
 # Amenone Dialogue System
 
-版: 2.1.0（`package-version.txt`）。変更の記録は `CHANGELOG.md`。
+版: 2.1.1（`package-version.txt`）。変更の記録は `CHANGELOG.md`。
 
 ## 1. これは何か
 
@@ -214,6 +214,21 @@ public sealed class FadeCommands
 
 `RegisterCommandHandler` のラムダでも同じに受けられる（`_commands.RegisterCommandHandler<float, CancellationToken>("fade_in", (seconds, token) => ...)`）。`RegisterCommandHandler` の型引数は 4 つまでなので、token を受けるラムダの台本の引数は 3 つまで。それより多い時は `[YarnCommand]` のメソッドで書く（`RegisterCommandsFromInstance` か `RegisterStaticCommands` で登録する。Yarn Spinner の解析器が、`[YarnCommand]` のメソッドを public の型に置く事を求める）。token のキャンセルで止まった命令はエラーのログを出さない。
 
+`CancellationToken` を受ける命令を `[YarnCommand]` で書くと、Yarn Spinner の言語サーバー用の命令の一覧で `containsErrors: true` になり、コンパイルの警告 `YS1011` が出る（実行には効かない。「8. 既知の制限と未確認の事」）。一覧をきれいに保ちたい時は、token を受ける命令に `[YarnCommand]` を付けず、`RegisterCommandHandler` で登録する。`<<wait>>` もそうしている（`DefaultYarnCommands.RegisterTo`）。
+
+```csharp
+public sealed class FadeCommands
+{
+    public void RegisterTo(ICommandStorage commands) =>
+        commands.RegisterCommandHandler<float, CancellationToken>("fade_in", FadeInAsync);   // <<fade_in 0.5>>
+
+    public async UniTask FadeInAsync(float seconds, CancellationToken token)
+    {
+        await UniTask.Delay(TimeSpan.FromSeconds(seconds), cancellationToken: token);
+    }
+}
+```
+
 ### 表示の拡張（`LineDisplayExtensions`、`ViewAbstract`）
 
 Root に 1 つだけある。子のスコープで登録した物は親から見えないので、ゲームの組み立ての `RegisterBuildCallback` で解決して足す。
@@ -391,6 +406,10 @@ public sealed class AutoTextFeeder
 - 選択肢を出している間（`WaitingForOptionSelection`）は命令が走らない
 - 2 つの対話を同時に走らせる形は未確認
 - 「3. 依存の一覧」の版より前の Unity・VContainer・MessagePipe での動作は未確認
+- Yarn Spinner for Unity のソースジェネレータは、属性を型の名前（`YarnCommandAttribute`）で拾うので、このライブラリの `[YarnCommand]` の命令も、アセンブリごとの言語サーバー用の命令の一覧（`ProjectSettings/Packages/dev.yarnspinner/<アセンブリ名>-generated.ysls.json`）に載る。実行には効かない
+  - インスタンスのメソッドは、一覧の引数の先頭に Yarn の流儀の `target`（命令を受ける GameObject の名前）が足される。このライブラリの命令は `target` を取らないので、一覧の引数は台本の書き方と合わない（`log` など）
+  - Yarn の型でない引数（`CancellationToken`、`GameObject` など）を持つ命令は `containsErrors: true` になる。ライブラリの `set_active` と `destroy`（引数が `GameObject`）はそうなる。token を受ける命令の書き方は「6. ゲーム側からの拡張点」の「命令の登録」
+  - ライブラリのテストのアセンブリ（`amenone.dialogue.logic.tests`）は `[YarnCommand]` の付いたメソッドの走査を確かめるので、`Tests/` を入れると `amenone.dialogue.logic.tests-generated.ysls.json` も作られる。コミットしても無視してもよい。作らせたくない時は `Tests/` を入れないか、`ProjectSettings/Packages/dev.yarnspinner/YarnSpinnerProjectSettings.json` の `generateYSLSFile` を `false` にする（ゲームの命令の一覧も作られなくなる）
 
 ## 9. 開発のしかた
 
@@ -400,7 +419,7 @@ public sealed class AutoTextFeeder
 - `.unitypackage` の作り方（Python 3.10 以上の標準ライブラリだけ。Unity は要らない）:
 
   ```sh
-  python Tools/build_unitypackage.py --source UnityPackageSources/AmenoneDialogue --root Assets/AmenoneDialogue --output Build/AmenoneDialogue-2.1.0.unitypackage
+  python Tools/build_unitypackage.py --source UnityPackageSources/AmenoneDialogue --root Assets/AmenoneDialogue --output Build/AmenoneDialogue-2.1.1.unitypackage
   ```
 
   - `.meta` の無いファイル、対応するファイルの無い `.meta`、GUID の重複があると、エラーで止まる
@@ -424,7 +443,7 @@ public sealed class AutoTextFeeder
 
 ## 10. 確かめた構成
 
-2.0.0 で、次の組み合わせで確かめた（Play モードの確かめ以外はバッチモード）。2.0.1 は、同じ組み合わせで、コンパイルの `error CS` 0 と、EditMode テスト 43 件（Logic 11、通知 30、View 2）と csharpextension のテスト 11 件が全件通る事を確かめた。2.0.1 で足した 8 件のうち 4 件は、2.0.0 の `DialogueStateQueue` では落ちる。2.0.2 は、同じ組み合わせで、コンパイルの `error CS` 0 と、EditMode テスト 93 件（Logic 29、通知 62、View 2）と csharpextension のテスト 11 件が全件通る事を確かめた。2.0.2 で足した `DialogueStateHandlerCancellationTest` の 3 件は、2.0.1 の `DialogueStateHandlerBase` では落ちる。`DialogueStateQueue` の「順番が来た時に token がキャンセル済みなら実行しない」確かめと、`CommandDispatcher` の「命令の後に token を確かめる」行を外した写しでは、Logic と通知のテスト 91 件のうち 8 件が落ちる。2.0.2 の `.unitypackage` を、依存だけを入れたプロジェクトに `-importPackage` で入れ、全ファイルが `Assets/AmenoneDialogue/` に `.meta` を含めてバイト単位で同じに展開され、`error CS` 0 で、同じ 93 件と 11 件が全件通る事も確かめた。2.1.0 は、同じ組み合わせで、コンパイルの `error CS` 0 と、EditMode テスト 96 件（Logic 32、通知 62、View 2）と csharpextension のテスト 11 件が全件通る事を確かめた。2.1.0 で足した `DialogueHolderTest` の 3 件のうち、VM が例外を出す時の 2 件は、`DialogueHolder.Continue` の `try`/`catch` を外した写しでは落ちる。
+2.0.0 で、次の組み合わせで確かめた（Play モードの確かめ以外はバッチモード）。2.0.1 は、同じ組み合わせで、コンパイルの `error CS` 0 と、EditMode テスト 43 件（Logic 11、通知 30、View 2）と csharpextension のテスト 11 件が全件通る事を確かめた。2.0.1 で足した 8 件のうち 4 件は、2.0.0 の `DialogueStateQueue` では落ちる。2.0.2 は、同じ組み合わせで、コンパイルの `error CS` 0 と、EditMode テスト 93 件（Logic 29、通知 62、View 2）と csharpextension のテスト 11 件が全件通る事を確かめた。2.0.2 で足した `DialogueStateHandlerCancellationTest` の 3 件は、2.0.1 の `DialogueStateHandlerBase` では落ちる。`DialogueStateQueue` の「順番が来た時に token がキャンセル済みなら実行しない」確かめと、`CommandDispatcher` の「命令の後に token を確かめる」行を外した写しでは、Logic と通知のテスト 91 件のうち 8 件が落ちる。2.0.2 の `.unitypackage` を、依存だけを入れたプロジェクトに `-importPackage` で入れ、全ファイルが `Assets/AmenoneDialogue/` に `.meta` を含めてバイト単位で同じに展開され、`error CS` 0 で、同じ 93 件と 11 件が全件通る事も確かめた。2.1.0 は、同じ組み合わせで、コンパイルの `error CS` 0 と、EditMode テスト 96 件（Logic 32、通知 62、View 2）と csharpextension のテスト 11 件が全件通る事を確かめた。2.1.0 で足した `DialogueHolderTest` の 3 件のうち、VM が例外を出す時の 2 件は、`DialogueHolder.Continue` の `try`/`catch` を外した写しでは落ちる。2.1.1 は、同じ組み合わせで、コンパイルの `error CS` 0 と、EditMode テスト 96 件（Logic 32、通知 62、View 2）と csharpextension のテスト 11 件が全件通る事を確かめた。コンパイルの後の `ProjectSettings/Packages/dev.yarnspinner/amenone.dialogue.logic-generated.ysls.json` は、2.1.0 では `wait`（`containsErrors: true`）・`log`・`set_active`・`destroy` を載せ、2.1.1 では `wait` を載せない（`log`・`set_active`・`destroy` は同じ）。`amenone.dialogue.logic.tests-generated.ysls.json` は、2.1.0 と同じく 2.1.1 でも作られる。
 
 - Unity 6000.7.0b1、VContainer 1.19.0、MessagePipe / MessagePipe.VContainer（コミット 3adc01d）、Yarn Spinner 3.2.8、com.unity.localization 2.0.0、com.unity.inputsystem 6.7.0、com.unity.ugui 2.7.0、com.unity.test-framework 1.9.0、AutoConstructor 5.6.0、FastEnum 1.8.0（NuGetForUnity は入れず、展開済みの `Assets/Packages/` を置いた）、com.amenone.csharpextension 0.1.5
 - Scripting Define Symbols は `FORCE_YARNLOCALIZATION`

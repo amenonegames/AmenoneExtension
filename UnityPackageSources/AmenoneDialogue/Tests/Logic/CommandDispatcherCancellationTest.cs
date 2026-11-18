@@ -222,7 +222,7 @@ namespace Logic.Tests
         [UnityTest, Timeout(WaitLimitMilliseconds)]
         public IEnumerator Dispatch_WaitCommandTokenCanceled_ShouldStopWaiting() => UniTask.ToCoroutine(async () =>
         {
-            _dispatcher.RegisterCommandsFromInstance(new DefaultYarnCommands());
+            new DefaultYarnCommands().RegisterTo(_dispatcher);
             var dispatching = _dispatcher.DispatchCommandAsync("wait 60", _tokenSource.Token);
 
             _tokenSource.Cancel();
