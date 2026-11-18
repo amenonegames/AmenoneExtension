@@ -14,12 +14,15 @@ namespace Amenone.ArchitectureGuard.Analyzers.Tests
     internal static class AnalyzerRunner
     {
         private const string RuntimeSourceDirectoryName = "RuntimeSources";
+        private const string DefaultAssemblyName = "ArchitectureGuardTarget";
 
         private static readonly ImmutableArray<DiagnosticAnalyzer> Analyzers = ImmutableArray.Create<DiagnosticAnalyzer>(
             new UnityTimeAnalyzer(),
             new UnityMessageAnalyzer(),
             new AllowReasonAnalyzer(),
-            new SuppressionAnalyzer());
+            new SuppressionAnalyzer(),
+            new EntityQueryCreationAnalyzer(),
+            new MessageSubscriberAnalyzer());
 
         private static readonly CSharpParseOptions ParseOptions = new CSharpParseOptions(LanguageVersion.Latest);
 
@@ -31,9 +34,20 @@ namespace Amenone.ArchitectureGuard.Analyzers.Tests
 
         public static string[] AnalyzeIdsWithoutUnityEngine(string source) => IdsOf(Analyze(source, includeUnityEngine: false));
 
-        public static ImmutableArray<Diagnostic> Analyze(string source, bool includeUnityEngine = true, bool allowCompileErrors = false)
+        public static string[] AnalyzeIdsWith(string source, params LibraryStub[] libraries) =>
+            IdsOf(Analyze(source, libraries: libraries));
+
+        public static string[] AnalyzeIdsIn(string assemblyName, string source, params LibraryStub[] libraries) =>
+            IdsOf(Analyze(source, assemblyName: assemblyName, libraries: libraries));
+
+        public static ImmutableArray<Diagnostic> Analyze(
+            string source,
+            bool includeUnityEngine = true,
+            bool allowCompileErrors = false,
+            string assemblyName = DefaultAssemblyName,
+            IReadOnlyCollection<LibraryStub>? libraries = null)
         {
-            var compilation = CreateCompilation(source, includeUnityEngine);
+            var compilation = CreateCompilation(source, includeUnityEngine, assemblyName, libraries ?? Array.Empty<LibraryStub>());
             if (!allowCompileErrors)
             {
                 AssertNoCompileErrors(compilation);
@@ -55,7 +69,24 @@ namespace Amenone.ArchitectureGuard.Analyzers.Tests
             return diagnostics;
         }
 
-        private static CSharpCompilation CreateCompilation(string source, bool includeUnityEngine)
+        public static MetadataReference CompileLibrary(string assemblyName, string source)
+        {
+            var compilation = CSharpCompilation.Create(
+                assemblyName,
+                new[] { CSharpSyntaxTree.ParseText(source, ParseOptions) },
+                PlatformReferences.Value,
+                new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+            AssertNoCompileErrors(compilation);
+            using var image = new MemoryStream();
+            Assert.True(compilation.Emit(image).Success);
+            return MetadataReference.CreateFromImage(image.ToArray());
+        }
+
+        private static CSharpCompilation CreateCompilation(
+            string source,
+            bool includeUnityEngine,
+            string assemblyName,
+            IReadOnlyCollection<LibraryStub> libraries)
         {
             var sources = new List<string> { source };
             sources.AddRange(ReadRuntimeSources());
@@ -65,9 +96,9 @@ namespace Amenone.ArchitectureGuard.Analyzers.Tests
             }
 
             return CSharpCompilation.Create(
-                "ArchitectureGuardTarget",
+                assemblyName,
                 sources.Select(text => CSharpSyntaxTree.ParseText(text, ParseOptions)),
-                PlatformReferences.Value,
+                PlatformReferences.Value.AddRange(libraries.Select(library => library.Reference)),
                 new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
         }
 

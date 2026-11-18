@@ -246,6 +246,28 @@ namespace Amenone.ArchitectureGuard.Analyzers.Tests
             Assert.Equal(new[] { "AG0003" }, AnalyzerRunner.AnalyzeIds(source));
         }
 
+        [Theory]
+        [InlineData("Awake", "非アクティブな GameObject では、アクティブになるまで Awake() が呼ばれません")]
+        [InlineData("Start", "GameObject が非アクティブか、コンポーネントが無効の間は Start() が呼ばれません")]
+        [InlineData("OnDestroy", "1 度もアクティブにならなかった GameObject では OnDestroy() が呼ばれません")]
+        [InlineData("Update", "Update() はどれが先に呼ばれるかがコードから読めません")]
+        [InlineData("FixedUpdate", "FixedUpdate() はどれが先に呼ばれるかがコードから読めません")]
+        public void MonoBehaviour_MessageDeclaration_ShouldExplainWhyToAvoid(string messageName, string reason)
+        {
+            var source = $$"""
+                using UnityEngine;
+
+                public sealed class View : MonoBehaviour
+                {
+                    private void {{messageName}}() {}
+                }
+                """;
+
+            var diagnostic = Assert.Single(AnalyzerRunner.Analyze(source));
+
+            Assert.Contains($"View が Unity のメッセージ {messageName}() を宣言しています。{reason}。", diagnostic.GetMessage());
+        }
+
         [Fact]
         public void MonoBehaviour_StaticAndGenericMessages_ShouldNotReport()
         {

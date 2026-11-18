@@ -32,7 +32,7 @@ namespace Amenone.ArchitectureGuard.Analyzers
         public static readonly DiagnosticDescriptor UnityMessageDeclaration = new DiagnosticDescriptor(
             id: "AG0003",
             title: "MonoBehaviour が Unity のメッセージを宣言している",
-            messageFormat: "MonoBehaviour を継ぐ {0} が Unity のメッセージ {1}() を宣言しています。Unity が呼ぶ時機と順序に頼らないでください。初期化と破棄は明示的なメソッドにして、生成と破棄を管理する側から呼んでください。順序が意味を持つ毎フレームの処理は、呼ぶ側が順に呼んでください。Unity のメッセージでなければ成り立たない場合は、このメソッドに [AllowUnityMessage(\"理由\")] を付けて理由を書いてください。",
+            messageFormat: "MonoBehaviour を継ぐ {0} が Unity のメッセージ {1}() を宣言しています。{2}。Unity が呼ぶ時機と順序に頼らないでください。初期化と破棄は明示的なメソッドにして、生成と破棄を管理する側から呼んでください。順序が意味を持つ毎フレームの処理は、呼ぶ側が順に呼んでください。Unity のメッセージでなければ成り立たない場合は、このメソッドに [AllowUnityMessage(\"理由\")] を付けて理由を書いてください。",
             category: Category,
             defaultSeverity: DefaultSeverity,
             isEnabledByDefault: true);
@@ -48,11 +48,27 @@ namespace Amenone.ArchitectureGuard.Analyzers
         public static readonly DiagnosticDescriptor DiagnosticSuppression = new DiagnosticDescriptor(
             id: "AG0005",
             title: "ArchitectureGuard の診断を抑制している",
-            messageFormat: "{0} は ArchitectureGuard の診断を抑制しています。この診断は抑制も重大度の変更もできません。抑制をやめて、診断が指す箇所を直してください。決まりの例外にするなら、[AllowUnityTime(\"理由\")] か [AllowUnityMessage(\"理由\")] を付けて理由を書いてください。",
+            messageFormat: "{0} は ArchitectureGuard の診断を抑制しています。#pragma と [SuppressMessage] による抑制は認めていません。抑制をやめて、診断が指す箇所を直してください。決まりの例外にするなら、許可の属性がある AG0001〜AG0003 は [AllowUnityTime(\"理由\")] か [AllowUnityMessage(\"理由\")] を付けて理由を書き、属性の無い AG0006 と AG0007 はアセンブリ単位のルールセットで外して、理由をルールセットのコメントに書いてください。",
             category: Category,
             defaultSeverity: DefaultSeverity,
             isEnabledByDefault: true,
             customTags: WellKnownDiagnosticTags.NotConfigurable);
+
+        public static readonly DiagnosticDescriptor EntityQueryCreationInUpdate = new DiagnosticDescriptor(
+            id: "AG0006",
+            title: "System の OnUpdate の中で EntityQuery を作っている",
+            messageFormat: "{0} の OnUpdate の中で {1} により EntityQuery を作っています。OnUpdate は毎フレーム呼ばれるので、query を作る（同じ query を探す）処理も毎フレーム走ります。OnCreate で作ってフィールドに持ち、OnUpdate ではそれを使ってください。SystemAPI.Query や SystemAPI.QueryBuilder は、ソース生成が OnCreate へ移すのでそのまま使えます。",
+            category: Category,
+            defaultSeverity: DefaultSeverity,
+            isEnabledByDefault: true);
+
+        public static readonly DiagnosticDescriptor MessageSubscriberOutsidePresenter = new DiagnosticDescriptor(
+            id: "AG0007",
+            title: "Presenter 以外のアセンブリが MessagePipe の購読の型を受け取っている",
+            messageFormat: "アセンブリ {0} の {1} が {2} を受け取っています。メッセージを購読してよいのは Presenter のアセンブリ（名前を区切り文字で分けた 1 つが presenter か presenters のもの）だけです。受け手が Presenter に集まっていれば、発行されたメッセージがどこへ届くかを Presenter だけ読めば追えます。他の層で反応が要る場合は、Presenter が購読して、その層の interface を呼んでください。",
+            category: Category,
+            defaultSeverity: DefaultSeverity,
+            isEnabledByDefault: true);
 
         private static readonly ImmutableHashSet<string> Ids = new[]
             {
@@ -61,6 +77,8 @@ namespace Amenone.ArchitectureGuard.Analyzers
                 UnityMessageDeclaration,
                 InvalidAllowReason,
                 DiagnosticSuppression,
+                EntityQueryCreationInUpdate,
+                MessageSubscriberOutsidePresenter,
             }
             .Select(descriptor => descriptor.Id)
             .ToImmutableHashSet(StringComparer.Ordinal);

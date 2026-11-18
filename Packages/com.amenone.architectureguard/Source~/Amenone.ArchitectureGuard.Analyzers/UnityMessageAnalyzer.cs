@@ -56,8 +56,17 @@ namespace Amenone.ArchitectureGuard.Analyzers
                 ArchitectureGuardDiagnostics.UnityMessageDeclaration,
                 method.Locations[0],
                 method.ContainingType.Name,
-                method.Name));
+                method.Name,
+                ReasonToAvoid(method.Name)));
         }
+
+        private static string ReasonToAvoid(string messageName) => messageName switch
+        {
+            "Awake" => "非アクティブな GameObject では、アクティブになるまで Awake() が呼ばれません",
+            "Start" => "GameObject が非アクティブか、コンポーネントが無効の間は Start() が呼ばれません",
+            "OnDestroy" => "1 度もアクティブにならなかった GameObject では OnDestroy() が呼ばれません",
+            _ => $"{messageName}() はどれが先に呼ばれるかがコードから読めません",
+        };
 
         private static bool IsGuardedMessage(IMethodSymbol method) =>
             method.MethodKind == MethodKind.Ordinary
