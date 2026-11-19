@@ -1,0 +1,47 @@
+{
+    "name": "amenone.ecsbridge.sample.minimal",
+    "rootNamespace": "Amenone.EcsBridge.Samples.Minimal",
+    "references": [
+        "amenone.ecsbridge",
+        "Unity.Entities",
+        "VContainer",
+        "MessagePipe",
+        "MessagePipe.VContainer",
+        "UniTask"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "AMENONE_ECSBRIDGE_ENTITIES",
+        "AMENONE_ECSBRIDGE_VCONTAINER",
+        "AMENONE_ECSBRIDGE_MESSAGEPIPE",
+        "AMENONE_ECSBRIDGE_UNITASK"
+    ],
+    "versionDefines": [
+        {
+            "name": "com.unity.entities",
+            "expression": "1.0.0",
+            "define": "AMENONE_ECSBRIDGE_ENTITIES"
+        },
+        {
+            "name": "jp.hadashikick.vcontainer",
+            "expression": "1.13.0",
+            "define": "AMENONE_ECSBRIDGE_VCONTAINER"
+        },
+        {
+            "name": "com.cysharp.messagepipe.vcontainer",
+            "expression": "1.0.0",
+            "define": "AMENONE_ECSBRIDGE_MESSAGEPIPE"
+        },
+        {
+            "name": "com.cysharp.unitask",
+            "expression": "2.0.0",
+            "define": "AMENONE_ECSBRIDGE_UNITASK"
+        }
+    ],
+    "noEngineReferences": false
+}
