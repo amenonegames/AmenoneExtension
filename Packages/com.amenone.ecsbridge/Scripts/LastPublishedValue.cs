@@ -11,9 +11,20 @@ namespace Amenone.EcsBridge
         {
             if (_hasPublished && EqualityComparer<T>.Default.Equals(_published, value)) return false;
 
+            TreatAsPublished(value);
+            return true;
+        }
+
+        public bool TryGetPublished(out T value)
+        {
+            value = _published;
+            return _hasPublished;
+        }
+
+        public void TreatAsPublished(T value)
+        {
             _hasPublished = true;
             _published = value;
-            return true;
         }
 
         public void Clear()

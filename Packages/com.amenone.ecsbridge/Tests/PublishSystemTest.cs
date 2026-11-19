@@ -30,7 +30,7 @@ namespace Amenone.EcsBridge.Tests
         [Test]
         public void Update_AfterConstruct_ShouldPublishChangesEveryUpdate()
         {
-            _system.Construct(new TestPublisher());
+            _system.Construct(new DummyPublisher());
 
             _system.Update();
             _system.Update();
@@ -41,7 +41,7 @@ namespace Amenone.EcsBridge.Tests
         [Test]
         public void Construct_ShouldCallOnPublisherInjectedAfterSettingPublisher()
         {
-            var publisher = new TestPublisher();
+            var publisher = new DummyPublisher();
 
             _system.Construct(publisher);
 
@@ -51,8 +51,8 @@ namespace Amenone.EcsBridge.Tests
         [Test]
         public void Construct_CalledTwice_ShouldReplacePublisherAndCallOnPublisherInjectedEachTime()
         {
-            var first = new TestPublisher();
-            var second = new TestPublisher();
+            var first = new DummyPublisher();
+            var second = new DummyPublisher();
 
             _system.Construct(first);
             _system.Construct(second);
@@ -63,16 +63,16 @@ namespace Amenone.EcsBridge.Tests
         }
     }
 
-    public sealed class TestPublisher
+    public sealed class DummyPublisher
     {
     }
 
     [DisableAutoCreation]
-    public partial class RecordingPublishSystem : PublishSystem<TestPublisher>
+    public partial class RecordingPublishSystem : PublishSystem<DummyPublisher>
     {
         public int PublishCount { get; private set; }
-        public TestPublisher PublishedWith { get; private set; }
-        public List<TestPublisher> InjectedPublishers { get; } = new();
+        public DummyPublisher PublishedWith { get; private set; }
+        public List<DummyPublisher> InjectedPublishers { get; } = new();
 
         protected override void OnPublisherInjected() => InjectedPublishers.Add(Publisher);
 

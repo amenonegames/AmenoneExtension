@@ -5,6 +5,7 @@
         "amenone.ecsbridge",
         "Unity.Entities",
         "Unity.Entities.Hybrid",
+        "VContainer",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],

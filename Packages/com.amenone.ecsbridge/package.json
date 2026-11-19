@@ -1,7 +1,7 @@
 {
   "name": "com.amenone.ecsbridge",
   "displayName": "Amenone ECS Bridge",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "unity": "2022.3",
   "description": "Small parts that connect a VContainer + MessagePipe MVP structure with Unity Entities: default world singletons and queries that follow world recreation, a publish system base class, world clock driving and change detection helpers.",
   "author": {
@@ -12,6 +12,11 @@
       "displayName": "Minimal",
       "description": "A counter that goes from an MVP sender into ECS and back to an MVP presenter through MessagePipe.",
       "path": "Samples~/Minimal"
+    },
+    {
+      "displayName": "MultiplePublishers",
+      "description": "One publish system that publishes two kinds of messages through a publisher bundle class (elapsed seconds and their parity).",
+      "path": "Samples~/MultiplePublishers"
     }
   ]
 }

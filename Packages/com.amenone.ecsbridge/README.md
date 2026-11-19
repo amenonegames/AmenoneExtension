@@ -78,14 +78,104 @@ public partial class ScorePublishSystem : PublishSystem<IPublisher<ScoreChangedM
 builder.RegisterSystemFromDefaultWorld<ScorePublishSystem>();
 ```
 
-- `OnPublisherInjected()`: World を作り直さずに LifetimeScope だけを作り直すと、World に残った同じ System へ publisher が注入し直されます。前回値はここで戻してください（戻さないと、新しいスコープの購読者に今の値が届きません）
-- `LastPublishedValue<T>`: `TryUpdate(value)` は初回と値が変わった時に true。`Clear()` で初回に戻ります。比較は `EqualityComparer<T>.Default`
-- `LastPublished<TKey, TValue>`: キーごとの前回値。使い方は同じです
+- `OnPublisherInjected()`: World を作り直さずに LifetimeScope だけを作り直すと、World に残った同じ System へ publisher が注入し直されます。前回値をどう扱うかはここに書きます（下の「最初の値を発行するかどうか」）
+- `LastPublishedValue<T>`: `TryUpdate(value)` は初回と値が変わった時に true。`Clear()` で初回に戻ります。`TreatAsPublished(value)` はその値を発行済みとして扱います（発行はしない）。`TryGetPublished(out value)` で前回値を読みます。比較は `EqualityComparer<T>.Default`
+- `LastPublished<TKey, TValue>`: キーごとの前回値。`TryUpdate(key, value)`・`TreatAsPublished(key, value)`・`TryGetPublished(key, out value)`・`Clear()` は同じです。`TreatEveryKeyAsPublished(value)` は、覚えているキーを忘れ、まだ見ていないキーも含めて全部のキーがその値を発行済みとして扱います（`TryGetPublished` もまだ見ていないキーにこの値を返す）。`Clear()` はこの値も忘れます
 
-基底クラスを使う時と使わない時の目安:
+前回値の部品は使わなくても構いません。基底の `PublishSystem<TPublisher>` は前回値の持ち方を縛らないので、部品に合わない判定は System が自分のフィールドで持ってください。
 
-- 1 つの System が 1 種類のメッセージを出すなら `PublishSystem<TPublisher>` を継ぎます
-- 複数の種類のメッセージを出す System は、この基底を使わず `SystemBase` を直接継ぎ、`[Inject] public void Construct(...)` で publisher を全部受け、`OnUpdate` の先頭で受け取り済みかを確かめてください
+### 複数の種類のメッセージを出す System
+
+publisher を名前付きのフィールドに持つ小さなクラス（publisher の束）を作り、`PublishSystem<束のクラス>` を継ぎます。
+VContainer が束を組み立てて基底の `[Inject] Construct` に渡すので、基底の「注入までは何もしない」「`OnPublisherInjected()`」はそのまま使えます。
+
+```csharp
+public sealed class ScorePublishers
+{
+    public readonly IPublisher<ScoreChangedMessage> Score;
+    public readonly IBufferedPublisher<ComboChangedMessage> Combo;
+
+    public ScorePublishers(IPublisher<ScoreChangedMessage> score, IBufferedPublisher<ComboChangedMessage> combo)
+    {
+        Score = score;
+        Combo = combo;
+    }
+}
+
+public partial class ScorePublishSystem : PublishSystem<ScorePublishers>
+{
+    private readonly LastPublishedValue<int> _lastScore = new();
+    private readonly LastPublishedValue<int> _lastCombo = new();
+
+    protected override void OnPublisherInjected()
+    {
+        _lastScore.Clear();
+        _lastCombo.Clear();
+    }
+
+    protected override void PublishChanges()
+    {
+        var score = SystemAPI.GetSingleton<Score>();
+        if (_lastScore.TryUpdate(score.Value)) Publisher.Score.Publish(new ScoreChangedMessage(score.Value));
+        if (_lastCombo.TryUpdate(score.Combo)) Publisher.Combo.Publish(new ComboChangedMessage(score.Combo));
+    }
+}
+```
+
+```csharp
+var options = builder.RegisterMessagePipe();
+builder.RegisterMessageBroker<ScoreChangedMessage>(options);
+builder.RegisterMessageBroker<ComboChangedMessage>(options);
+builder.Register<ScorePublishers>(Lifetime.Singleton);
+builder.RegisterSystemFromDefaultWorld<ScorePublishSystem>();
+```
+
+束は System と同じスコープに登録してください。束の中の publisher は、そのスコープ（か親）で解決できる必要があります。
+例の `ComboChangedMessage` は `IBufferedPublisher<T>` で出すので、class にしてください（struct だと下の「知っておく事」の MessagePipe の注意に当たります）。
+
+### 最初の値を発行するかどうか
+
+注入の時（初めての注入と、スコープを作り直した後の注入し直し）に前回値をどう扱うかを、`OnPublisherInjected()` に 1 行で書きます。
+
+```csharp
+// 1. 今の値を発行し直す: 次の更新で、今の値を必ず発行する
+protected override void OnPublisherInjected() => _lastScore.Clear();
+
+// 2. ある値を発行済みとして扱う: 今の値がその値なら黙り、違う時だけ発行する
+protected override void OnPublisherInjected() => _lastScore.TreatAsPublished(0);
+
+// 3. 前回値を覚えたままにする: OnPublisherInjected を上書きしない（前のスコープで発行した値と同じなら黙る）
+```
+
+- 1 は、購読する側が値を受け取るまで何も出せない時（新しいスコープの View を今の値で埋めたい時）に選びます
+- 2 は、既定の状態なら何も知らせたくない時に選びます（例: 0 点の時は「スコアが変わった」演出を出したくない）。View の最初の表示が、渡した値の表示と同じになっている時だけ使ってください。そうでないと、今の値が渡した値と同じ時に発行されず、新しい View が最初の表示のまま残ります
+- 3 は、スコープを作り直しても購読する側が前の値を覚えている時、または発行を「その時に起きた事」の知らせとして扱い、作り直した後に同じ知らせを繰り返したくない時に選びます
+
+キー別の `LastPublished<TKey, TValue>` では、2 は `TreatEveryKeyAsPublished(value)` です。このメソッドは覚えたキーも全部忘れるので、どこで呼ぶかで意味が変わります。
+
+```csharp
+// 注入のたびに、覚えたキーを忘れ、全部のキーを value で発行済みとして扱う
+protected override void OnPublisherInjected() => _lastStates.TreatEveryKeyAsPublished(State.Idle);
+
+// System を作った時に 1 度だけ。注入し直しても各キーの前回値は覚えたままで、まだ見ていないキーだけ value で発行済みとして扱う
+protected override void OnCreate() => _lastStates.TreatEveryKeyAsPublished(State.Idle);
+```
+
+### 発行するかどうかを前回値そのもので決める時
+
+「変わったら発行する」ではなく、前回値を見て決める時（例: 前回が「動いている」だった時だけ「止まった」を出す）は、`TryGetPublished` で読み、発行した時に `TreatAsPublished` で記録します。
+
+```csharp
+foreach (var (id, state) in CurrentStates())
+{
+    // まだ見ていないキーは false と default。TreatEveryKeyAsPublished を呼んであれば true とその値
+    var hasPublished = _lastStates.TryGetPublished(id, out var published);
+    if (!ShouldPublish(hasPublished, published, state)) continue;
+
+    _lastStates.TreatAsPublished(id, state);
+    Publisher.Publish(new StateChangedMessage(id, state));
+}
+```
 
 ### DefaultWorldReset
 
@@ -111,10 +201,23 @@ builder.RegisterEntryPoint<WorldClockDriver>();
 
 ## サンプル
 
-Package Manager からこのパッケージの Samples の「Minimal」を Import してください。カウンターの値が MVP → ECS → MVP と 1 往復します。置き方は `Samples~/Minimal/README.md` にあります。
+Package Manager からこのパッケージの Samples を Import してください。置き方は各サンプルの `README.md` にあります。
 
-## 既知の制限・確かめていない事
+- 「Minimal」: カウンターの値が MVP → ECS → MVP と 1 往復します
+- 「MultiplePublishers」: 1 つの System が publisher の束で 2 種類のメッセージ（経過秒と、その偶奇）を発行します
 
-- 既定の World（`World.DefaultGameObjectInjectionWorld`）だけを扱います。名前付きの World や複数の World には対応していません
-- LifetimeScope を破棄しても、System は破棄済みの publisher を持ち続けます。MessagePipe（上の表のコミット）の破棄済みのブローカーへの `Publish` は、`IPublisher<T>` でも `IBufferedPublisher<T>` でも例外になりません（スコープを Dispose してから System を Update する EditMode テストで確かめた）
-- 確かめたのは上の表の版での EditMode テストと、サンプルのコンパイルだけです。Play モードでの動き、ビルドした実機、Entities 1.x、VContainer 1.19.0 より古い版では確かめていません
+## 知っておく事
+
+- MessagePipe の `IBufferedSubscriber<T>` は、メッセージが struct だと、まだ何も発行していなくても購読した時に `default` を渡します（上の表の MessagePipe のコミットで、リポジトリの外の検証用のプロジェクトに MultiplePublishers サンプルを入れた EditMode テストで確かめた。このテストはこのリポジトリには入っていません）。`IBufferedPublisher<T>` で出すメッセージは class にしてください。束に入れた `IBufferedPublisher<T>` でも同じです
+
+## 確かめた事・確かめていない事
+
+- 確かめた事
+  - 上の表の版での、このパッケージの EditMode テスト（束を VContainer のコンテナから注入して 2 種類を発行する事を含む）と、2 つのサンプルのコンパイル
+  - `DefaultWorldSingleton` などの送る側の部品と `WorldClockDriver` は、0.1.0 を取り込んだ実際のゲームのプロジェクトの Play で、World を作り直した後まで動く事（Unity 6000.7.0b1、Entities 6.7.0、VContainer 1.19.0。上の表の版と同じ。利用側のプロジェクトからの報告による）
+  - LifetimeScope を破棄しても、System は破棄済みの publisher を持ち続けます。MessagePipe（上の表のコミット）の破棄済みのブローカーへの `Publish` は、`IPublisher<T>` でも `IBufferedPublisher<T>` でも例外になりません（リポジトリの外の検証用のプロジェクトで、スコープを Dispose してから System を Update する EditMode テストで確かめた。このテストはこのリポジトリには入っていません）
+- 確かめていない事
+  - `PublishSystem<TPublisher>` と `LastPublishedValue` / `LastPublished` は、実際のゲームではまだ使われていません（EditMode テストだけ）
+  - サンプルの Play モードでの動き、ビルドした実機、Entities 1.x、VContainer 1.19.0 より古い版
+- 制限
+  - 既定の World（`World.DefaultGameObjectInjectionWorld`）だけを扱います。名前付きの World や複数の World には対応していません
