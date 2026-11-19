@@ -4,7 +4,7 @@ Unity プロジェクトで文章として決めている設計の決まりを�
 
 診断を出す範囲は、`amenone.architectureguard` の asmdef を参照したアセンブリだけにする設計です。Unity の文書では、asmdef のフォルダの下にある `RoslynAnalyzer` ラベル付きの DLL は、その asmdef を参照するアセンブリに適用されるとされています。このパッケージでは、この挙動を Unity の実機ではまだ確かめていません。決まりを守らせたいアセンブリの asmdef だけに参照を足してください。
 
-規則が対象にするライブラリ（UnityEngine、Unity.Entities、MessagePipe）が入っていないプロジェクトやアセンブリでは、その規則は何もしません。型は名前の一致ではなくシンボルで判定するので、自前の `SystemBase` や `ISubscriber<T>` のような同じ名前の型には反応しません。
+規則が対象にするライブラリ（UnityEngine、Unity.Entities、MessagePipe、com.amenone.ecsbridge）が入っていないプロジェクトやアセンブリでは、その規則は何もしません。型は名前の一致ではなくシンボルで判定するので、自前の `SystemBase` や `ISubscriber<T>`、`PublishSystem<T>` のような同じ名前の型には反応しません。
 
 ## 入れ方
 
@@ -43,9 +43,10 @@ Unity プロジェクトで文章として決めている設計の決まりを�
 | AG0002 | `UnityEngine.Time` の実時間の読み取り（`unscaledDeltaTime`、`unscaledTime`、`unscaledTimeAsDouble`、`fixedUnscaledDeltaTime`、`fixedUnscaledTime`、`fixedUnscaledTimeAsDouble`、`realtimeSinceStartup`、`realtimeSinceStartupAsDouble`） | `[AllowUnityTime("理由")]` |
 | AG0003 | `UnityEngine.MonoBehaviour` を継ぐクラスが宣言する、引数なしの `Awake` / `Start` / `OnDestroy` / `Update` / `LateUpdate` / `FixedUpdate`（戻り値は問わないので `IEnumerator Start` や `async void Start` も対象。`new` で基底のものを隠した宣言も対象） | そのメソッドに `[AllowUnityMessage("理由")]` |
 | AG0004 | 許可の属性の理由が不適切（書かれていない、空、空白だけ、空白を除いて 10 文字未満、文字列定数でない） | なし |
-| AG0005 | このパッケージの診断（AG0001〜AG0007）の抑制。`#pragma warning disable AG0001` のようにこのパッケージの ID を書いたもの、ID を書かない `#pragma warning disable`、`[SuppressMessage]`（`[assembly: ...]` と `[module: ...]` を含む）の CheckId がこのパッケージの ID のもの | なし。重大度の変更も抑制もできない |
+| AG0005 | このパッケージの診断（AG0001〜AG0008）の抑制。`#pragma warning disable AG0001` のようにこのパッケージの ID を書いたもの、ID を書かない `#pragma warning disable`、`[SuppressMessage]`（`[assembly: ...]` と `[module: ...]` を含む）の CheckId がこのパッケージの ID のもの | なし。重大度の変更も抑制もできない |
 | AG0006 | Unity.Entities の `SystemBase` を継ぐクラスの `OnUpdate()` と、`ISystem` を実装する型の `OnUpdate(ref SystemState)` の中で、EntityQuery を作る呼び出し（`GetEntityQuery(...)`、`SystemState.GetEntityQuery(...)`、`EntityManager.CreateEntityQuery(...)`、`new EntityQueryBuilder(...)....Build(...)` など、Unity.Entities のメソッドで戻り値が `EntityQuery` のもの）。`SystemAPI.Query<…>()`、`SystemAPI.QueryBuilder()....Build()`、`SystemAPI.GetSingleton<T>()` は対象外 | なし（後述の重大度の変え方を使う） |
 | AG0007 | Presenter のアセンブリ以外で、MessagePipe の購読の interface（`ISubscriber<T>`、`IAsyncSubscriber<T>`、`IBufferedSubscriber<T>`、`IBufferedAsyncSubscriber<T>`、キー付きの `ISubscriber<TKey, T>` / `IAsyncSubscriber<TKey, T>`、およびそれらを継ぐ型）を受け取る宣言（コンストラクタとメソッドの引数、フィールド、プロパティの型）。`IPublisher<T>` など発行の側と `IRequestHandler` は対象外 | なし（後述の重大度の変え方を使う） |
+| AG0008 | Unity.Entities の `SystemBase` を継ぐクラスと `ISystem` を実装する型のうち、MessagePipe の発行の interface（`IPublisher<T>`、`IAsyncPublisher<T>`、`IBufferedPublisher<T>`、`IBufferedAsyncPublisher<T>`、キー付きの `IPublisher<TKey, T>` / `IAsyncPublisher<TKey, T>`、およびそれらを継ぐ型）を受け取る宣言（コンストラクタとメソッドの引数、フィールド、プロパティの型）を持つのに、`com.amenone.ecsbridge` の `Amenone.EcsBridge.PublishSystem<TPublisher>` を継いでいないもの。診断は型に 1 件（クラス名の位置）。`PublishSystem<TPublisher>` を継ぐ型（間に別の基底を挟んでもよい）と、System でないクラス（publisher の束のクラスなど）は対象外 | なし（後述の重大度の変え方を使う） |
 
 ## 規則ごとの理由
 
@@ -55,6 +56,7 @@ Unity プロジェクトで文章として決めている設計の決まりを�
 - **AG0005**: 抑制すると、決まりの逸脱がコードから見えなくなります。例外は理由つきの許可の属性で書きます。
 - **AG0006**: `OnUpdate` は毎フレーム呼ばれるので、query を作る（同じ query を探す）処理も毎フレーム走ります。query は `OnCreate` で作ってフィールドに持ちます。`SystemAPI.Query` と `SystemAPI.QueryBuilder` は、Entities のソース生成が query を `OnCreate` へ移すので対象外です。
 - **AG0007**: 発行されたメッセージの受け手を Presenter に集めると、メッセージがどこへ届くかを Presenter だけ読めば追えます。他の層で反応が要る場合は、Presenter が購読して、その層の interface を呼びます。
+- **AG0008**: ECS から MVP へ発行する System の書き方を `PublishSystem<TPublisher>` の 1 つに揃え、publisher の注入と前回値の扱いは基底に任せます。基底が何をするかは `com.amenone.ecsbridge` の README に書いてあります。複数の種類を発行する System は、publisher をフィールドに持つ束のクラスを作り、`PublishSystem<束のクラス>` と書きます。`ISystem` の struct は基底クラスを継げないので、発行は `PublishSystem<TPublisher>` を継ぐクラスの System で行います。
 
 ID は、実在する ID と大文字小文字まで完全に一致するものだけを対象にします。`#pragma warning disable ag0001` や `AG1234` は AG0005 になりません。なお、Roslyn は pragma の ID を大文字小文字を区別して照合するので、`ag0001` と書いても AG0001 は消えません。
 
@@ -98,11 +100,44 @@ public sealed class SceneEntryPoint : MonoBehaviour
 }
 ```
 
+## エージェント向けの指示の文書
+
+パッケージの直下の `AGENT_GUIDE.md` は、コードを書くエージェント（Claude Code や Codex など）に向けた設計の指示です。Analyzer の警告は違反を止めますが、新しい型をどこに置きどう組むかは教えません。この文書は、アセンブリの分け方、MVP の役割、メッセージ、DI、時間、MonoBehaviour と ECS の決まりと、各診断の直し方をまとめたものです。プロジェクトごとに決める事は 10 章の表にあり、プロジェクトの側で埋めます。
+
+git で入れたパッケージはフォルダの名前に版やハッシュが付くので、文書はプロジェクトへ写してから読み込ませます。写し先はプロジェクトの直下の `docs/architectureguard/AGENT_GUIDE.md`（`Assets` の外）です。
+
+- **メニューで写す:** `Tools/Amenone/ArchitectureGuard/Copy Agent Guide To Project`。
+- **コマンドラインで写す:** 同じ処理を `Amenone.ArchitectureGuard.Editor.AgentGuide.CopyToProject` で呼べます。
+
+  ```sh
+  Unity -batchmode -quit -projectPath <プロジェクト> -executeMethod Amenone.ArchitectureGuard.Editor.AgentGuide.CopyToProject
+  ```
+
+- **Editor を使わずに写す:** `Library/PackageCache/com.amenone.architectureguard@*/AGENT_GUIDE.md`（`Packages/` に埋め込んでいる場合は `Packages/com.amenone.architectureguard/AGENT_GUIDE.md`）を `docs/architectureguard/` へコピーするだけでも構いません。
+
+メニューかメソッドで写した物には、写した版を書いた 1 行の HTML コメントが先頭に付きます。2 行目からはパッケージの文書とバイト単位で同じです（パッケージの文書に BOM が付いていれば、BOM だけは除きます）。写しは直接書き換えず、プロジェクト固有の事は `AGENTS.md` などに書きます。
+
+Editor を開くと（スクリプトを読み込むと）、写しがあれば本文をパッケージの文書と比べ、違っていれば警告を 1 回出します。1 回は Editor を起動している間で 1 回です。先頭のコメントの行がある写しはその行を除いて比べ、無い写し（手でコピーした物）は全体を比べます。比べる前に、両方から先頭の BOM を除き、改行を LF に揃えます。git の改行の設定などで BOM や改行だけが変わった写しは、古いと見なしません。写しが無いプロジェクトでは何もしません。比べるだけで、ファイルを書き換えることはありません。パッケージを上げたら、同じメニューかメソッドで写し直します。写しの中身が同じなら、ファイルは書き換えず、書き換えなかった事をログに出します。
+
+写した文書は、エージェントの指示のファイルから読み込みます。Claude Code の `CLAUDE.md` なら次の 1 行です。
+
+```
+@docs/architectureguard/AGENT_GUIDE.md
+```
+
+`AGENTS.md` には、例えば次のように書きます。その下に、文書の 10 章の表を写して埋めます。
+
+```markdown
+設計の決まりは `docs/architectureguard/AGENT_GUIDE.md` を読む。プロジェクト固有の事はこの下に書く。
+```
+
+写す口は、Editor だけの別のアセンブリ `amenone.architectureguard.editor`（`autoReferenced: false`）にあります。Analyzer の DLL は `amenone.architectureguard` の asmdef のフォルダにあるので、Editor のアセンブリを足しても、Analyzer が適用される範囲は変わりません。
+
 ## 重大度の変え方
 
 既定の重大度は、Analyzer のソースの `ArchitectureGuardDiagnostics.DefaultSeverity` の 1 か所で決めています。パッケージとして既定を変えるときは、そこを書き換えて DLL を作り直し、`AnalyzerReleases.Unshipped.md` に変更を書きます（後述の手順）。
 
-利用する側のプロジェクトで AG0001〜AG0004、AG0006、AG0007 の重大度を変えるには、ルールセットファイルを使います。`Assets/Default.ruleset` に書くとプロジェクト全体に、asmdef と同じフォルダに `<アセンブリ名>.ruleset` を置くとそのアセンブリだけに効きます（どちらも Unity 6000.7.0b1 のバッチモードのコンパイルで確認。他のバージョンでは未確認）。例えば警告をエラーにするには次のように書きます。
+利用する側のプロジェクトで AG0001〜AG0004、AG0006〜AG0008 の重大度を変えるには、ルールセットファイルを使います。`Assets/Default.ruleset` に書くとプロジェクト全体に、asmdef と同じフォルダに `<アセンブリ名>.ruleset` を置くとそのアセンブリだけに効きます（どちらも Unity 6000.7.0b1 のバッチモードのコンパイルで確認。他のバージョンでは未確認）。例えば警告をエラーにするには次のように書きます。
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
@@ -114,7 +149,7 @@ public sealed class SceneEntryPoint : MonoBehaviour
 </RuleSet>
 ```
 
-AG0006 と AG0007 には許可の属性がありません。AG0007 は層（アセンブリ）の単位で縛る規則なので、メンバーごとの例外にはあまり意味がありません。AG0006 は、OnUpdate で query を作ってよい場面が思い当たらなかったので、属性を足して公開する API を増やすより、同じ扱いにしました。例外にしたいアセンブリがある場合は、そのアセンブリの `<アセンブリ名>.ruleset` で `Action="None"` にし、理由をルールセットのコメントに書きます（`Action="None"` で AG0007 が消えることは、Unity 6000.7.0b1 のバッチモードのコンパイルで確認）。`#pragma warning disable AG0006` などは AG0005 になります。
+AG0006〜AG0008 には許可の属性がありません。AG0007 は層（アセンブリ）の単位で縛る規則なので、メンバーごとの例外にはあまり意味がありません。AG0006 は、OnUpdate で query を作ってよい場面が思い当たらなかったので、属性を足して公開する API を増やすより、同じ扱いにしました。AG0008 も、発行する System を `PublishSystem<TPublisher>` に揃えない理由が思い当たらなかったので、同じ扱いにしました。例外にしたいアセンブリがある場合は、そのアセンブリの `<アセンブリ名>.ruleset` で `Action="None"` にし、理由をルールセットのコメントに書きます（`Action="None"` で AG0007 が消えることは、Unity 6000.7.0b1 のバッチモードのコンパイルで確認）。`#pragma warning disable AG0006` や `#pragma warning disable AG0008` などは AG0005 になります。
 
 AG0005 には `NotConfigurable` を付けているので、ルールセットや `.editorconfig` では重大度を変えられず、`#pragma warning disable` でも消えません。ただし、次の節に書く例外が 1 つあります。
 
@@ -136,11 +171,21 @@ AG0005 には `NotConfigurable` を付けているので、ルールセットや
 - AG0007 では、アセンブリ名を `.`、`-`、`_` で区切り、区切った 1 つが `presenter` か `presenters`（大文字小文字を区別しない）なら Presenter のアセンブリとして扱います。区切った 1 つが `test` か `tests` のアセンブリと、`UnityEngine.TestRunner` を参照するアセンブリは、テストのアセンブリとして対象外にします。区切りの一部に含むだけのもの（`Game.NonPresenter`、`Game.Contests` など）は当たりません。設定で変える方法はありません。`nunit.framework` の参照はテストの目印にしません。Unity のエディタでのコンパイルでは、テストでないアセンブリにも `nunit.framework` の参照が付くためです。
 - AG0007 が見るのは、フィールド・プロパティの型と、メソッドとコンストラクタ（record の主コンストラクタを含む）の引数の型そのものです。次は対象外です: 別の型に包んだ型（`ISubscriber<T>[]`、`Func<ISubscriber<T>>`、`List<ISubscriber<T>>` などの型引数）、インデクサの引数、delegate の引数、event の型、ローカル関数とラムダの引数、ローカル変数、`IObjectResolver.Resolve<ISubscriber<T>>()` のような取り出し、`IDistributedSubscriber`。
 - AG0007 は宣言ごとに出します。partial メソッドの宣言と実装、interface の宣言とその明示的な実装、abstract と override では、それぞれに 1 件ずつ出ます。record の主コンストラクタは、引数とそこから作られるプロパティで 1 件です。
+- AG0008 は、`Unity.Entities.SystemBase` と `Unity.Entities.ISystem` のどちらも見つからないアセンブリ、MessagePipe の発行の interface が 1 つも見つからないアセンブリ、`Amenone.EcsBridge.PublishSystem<TPublisher>` が見つからないアセンブリ（`com.amenone.ecsbridge` を入れていない、または参照していないもの）では何もしません。テストのアセンブリの判定は AG0007 と同じで、テストのアセンブリは対象外です。
+- AG0008 が見る宣言の範囲は AG0007 と同じで、その型が自分で宣言したメンバーだけです。基底クラスが宣言した publisher は基底クラスの側で 1 件になり、派生クラスには出ません。`PublishSystem<TPublisher>` を継いでいる型は、publisher を別に持っていても出しません。System が購読の interface だけを受け取っている場合は AG0008 ではなく AG0007 の対象です。
+- AG0008 は partial で宣言が分かれた型にも 1 件だけ出します。出す位置は、生成コードのファイル（`// <auto-generated/>` で始まるもの、名前が `.g.cs` や `.generated.cs` などで終わるもの、`.editorconfig` の `generated_code = true` のもの）にない最初の宣言のクラス名です。生成コードの位置に出した診断は Roslyn が捨てるので、Entities のソース生成などが足した partial の宣言は選びません。
 
 ## 確かめた事
 
 - AG0001〜AG0005: Unity 6000.7.0b1 のバッチモードのコンパイルで、読み込みと警告、許可の属性、ルールセットを確かめました。
 - AG0006 と AG0007: Unity 6000.7.0b1 のバッチモードのコンパイルで、Unity.Entities と MessagePipe の代用の定義（同じ名前空間・同じアセンブリ名で、必要な型だけを書いたもの）に対して警告が出ること、Presenter のアセンブリと、このパッケージを参照しないアセンブリでは出ないことを確かめました。本物の Entities と MessagePipe を入れた Unity のプロジェクトでは確かめていません。本物を使うプロジェクトのソースには、リポジトリの外のハーネス（Roslyn でコンパイルを作って Analyzer を当てるもの）で当てて、件数を測っただけです。
+- AG0008: Unity 6000.7.0b1 のバッチモードのコンパイルで、Unity.Entities、MessagePipe、com.amenone.ecsbridge の代用の定義に対して警告が出ることを確かめました。本物の Entities、MessagePipe、com.amenone.ecsbridge を入れたプロジェクトのソースには、上と同じハーネスで当てて、`SystemBase` を直接継いで publisher を受け取る System の数と件数が合うことを確かめただけです。
+- 文書を写す口: パッケージを `Packages/` に埋め込んだプロジェクトで確かめました。Unity 6000.7.0b1 のバッチモードの `-executeMethod` で、次のことを確かめています。
+  - 写しが作られ、2 行目からがパッケージの文書と同じになる。もう一度写してもファイルは書き換わらない。
+  - パッケージの文書を変えると警告が 1 回出る。手で写した（先頭の行が無い）写しは、同じなら出ず、違えば出る。写しが無ければ出ず、`docs/` も作らない。
+  - Editor のアセンブリには Analyzer が適用されない。
+  - Unity 2022.3.62f3 でも、Editor のアセンブリがコンパイルでき、写せる。
+  - `Library/PackageCache` から入れた場合は確かめていません。
 
 ## Analyzer のビルドと DLL の更新
 
@@ -148,7 +193,7 @@ Analyzer のソースは `Source~/` にあります。Unity は名前の末尾�
 
 - `Source~/Amenone.ArchitectureGuard.sln`
 - `Source~/Amenone.ArchitectureGuard.Analyzers/`: Analyzer 本体（netstandard2.0、Microsoft.CodeAnalysis.CSharp 4.1.0）
-- `Source~/Amenone.ArchitectureGuard.Analyzers.Tests/`: xUnit のテスト（net8.0）。Unity の DLL は使わず、`UnityEngine` の代用定義と `Runtime/` の属性のソースでコンパイルを作って診断を確かめます
+- `Source~/Amenone.ArchitectureGuard.Analyzers.Tests/`: xUnit のテスト（net8.0）。Unity の DLL は使わず、`UnityEngine` の代用定義と `Runtime/` の属性のソースでコンパイルを作って診断を確かめます。`AGENT_GUIDE.md` が 9 章で全部の診断の ID を 1 回ずつ挙げていること、実在しない ID を書いていないこと、180 行以内であることも確かめます
 
 手順は次のとおりです。.NET 8 以降の SDK が必要です。
 

@@ -1,0 +1,16 @@
+{
+    "name": "amenone.architectureguard.editor",
+    "rootNamespace": "Amenone.ArchitectureGuard.Editor",
+    "references": [],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

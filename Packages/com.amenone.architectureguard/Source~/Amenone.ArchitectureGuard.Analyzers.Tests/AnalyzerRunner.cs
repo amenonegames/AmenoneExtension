@@ -22,7 +22,8 @@ namespace Amenone.ArchitectureGuard.Analyzers.Tests
             new AllowReasonAnalyzer(),
             new SuppressionAnalyzer(),
             new EntityQueryCreationAnalyzer(),
-            new MessageSubscriberAnalyzer());
+            new MessageSubscriberAnalyzer(),
+            new PublishingSystemAnalyzer());
 
         private static readonly CSharpParseOptions ParseOptions = new CSharpParseOptions(LanguageVersion.Latest);
 
@@ -40,14 +41,25 @@ namespace Amenone.ArchitectureGuard.Analyzers.Tests
         public static string[] AnalyzeIdsIn(string assemblyName, string source, params LibraryStub[] libraries) =>
             IdsOf(Analyze(source, assemblyName: assemblyName, libraries: libraries));
 
+        public static ImmutableArray<Diagnostic> AnalyzeFiles(IReadOnlyList<SourceFile> files, params LibraryStub[] libraries) =>
+            Analyze(files, includeUnityEngine: true, allowCompileErrors: false, DefaultAssemblyName, libraries);
+
         public static ImmutableArray<Diagnostic> Analyze(
             string source,
             bool includeUnityEngine = true,
             bool allowCompileErrors = false,
             string assemblyName = DefaultAssemblyName,
-            IReadOnlyCollection<LibraryStub>? libraries = null)
+            IReadOnlyCollection<LibraryStub>? libraries = null) =>
+            Analyze(new[] { new SourceFile(string.Empty, source) }, includeUnityEngine, allowCompileErrors, assemblyName, libraries ?? Array.Empty<LibraryStub>());
+
+        private static ImmutableArray<Diagnostic> Analyze(
+            IReadOnlyList<SourceFile> files,
+            bool includeUnityEngine,
+            bool allowCompileErrors,
+            string assemblyName,
+            IReadOnlyCollection<LibraryStub> libraries)
         {
-            var compilation = CreateCompilation(source, includeUnityEngine, assemblyName, libraries ?? Array.Empty<LibraryStub>());
+            var compilation = CreateCompilation(files, includeUnityEngine, assemblyName, libraries);
             if (!allowCompileErrors)
             {
                 AssertNoCompileErrors(compilation);
@@ -69,12 +81,12 @@ namespace Amenone.ArchitectureGuard.Analyzers.Tests
             return diagnostics;
         }
 
-        public static MetadataReference CompileLibrary(string assemblyName, string source)
+        public static MetadataReference CompileLibrary(string assemblyName, string source, IEnumerable<MetadataReference> dependencies)
         {
             var compilation = CSharpCompilation.Create(
                 assemblyName,
                 new[] { CSharpSyntaxTree.ParseText(source, ParseOptions) },
-                PlatformReferences.Value,
+                PlatformReferences.Value.AddRange(dependencies),
                 new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
             AssertNoCompileErrors(compilation);
             using var image = new MemoryStream();
@@ -83,21 +95,21 @@ namespace Amenone.ArchitectureGuard.Analyzers.Tests
         }
 
         private static CSharpCompilation CreateCompilation(
-            string source,
+            IReadOnlyList<SourceFile> files,
             bool includeUnityEngine,
             string assemblyName,
             IReadOnlyCollection<LibraryStub> libraries)
         {
-            var sources = new List<string> { source };
-            sources.AddRange(ReadRuntimeSources());
+            var sources = new List<SourceFile>(files);
+            sources.AddRange(ReadRuntimeSources().Select(text => new SourceFile(string.Empty, text)));
             if (includeUnityEngine)
             {
-                sources.Add(UnityEngineStub.Source);
+                sources.Add(new SourceFile(string.Empty, UnityEngineStub.Source));
             }
 
             return CSharpCompilation.Create(
                 assemblyName,
-                sources.Select(text => CSharpSyntaxTree.ParseText(text, ParseOptions)),
+                sources.Select(file => CSharpSyntaxTree.ParseText(file.Text, ParseOptions, file.Path)),
                 PlatformReferences.Value.AddRange(libraries.Select(library => library.Reference)),
                 new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
         }

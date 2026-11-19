@@ -1,7 +1,5 @@
 using System.Collections.Immutable;
-using System.Linq;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace Amenone.ArchitectureGuard.Analyzers
@@ -26,11 +24,8 @@ namespace Amenone.ArchitectureGuard.Analyzers
                 return;
             }
 
-            var subscribers = MetadataNames.MessagePipeSubscribers
-                .Select(context.Compilation.GetTypeByMetadataName)
-                .OfType<INamedTypeSymbol>()
-                .ToImmutableHashSet<INamedTypeSymbol>(SymbolEqualityComparer.Default);
-            if (subscribers.IsEmpty)
+            var subscribers = MessagePipeInterfaces.Resolve(context.Compilation, MetadataNames.MessagePipeSubscribers);
+            if (subscribers is null)
             {
                 return;
             }
@@ -45,12 +40,12 @@ namespace Amenone.ArchitectureGuard.Analyzers
 
         private static void AnalyzeMember(
             SymbolAnalysisContext context,
-            ImmutableHashSet<INamedTypeSymbol> subscribers,
+            MessagePipeInterfaces subscribers,
             string assemblyName)
         {
-            foreach (var (declaration, type) in ReceivedTypesOf(context.Symbol))
+            foreach (var (declaration, type) in ReceivedTypes.Of(context.Symbol))
             {
-                if (IsSubscriber(type, subscribers))
+                if (subscribers.Covers(type))
                 {
                     context.ReportDiagnostic(Diagnostic.Create(
                         ArchitectureGuardDiagnostics.MessageSubscriberOutsidePresenter,
@@ -61,33 +56,6 @@ namespace Amenone.ArchitectureGuard.Analyzers
                 }
             }
         }
-
-        private static ImmutableArray<(ISymbol Declaration, ITypeSymbol Type)> ReceivedTypesOf(ISymbol symbol) => symbol switch
-        {
-            IFieldSymbol { IsImplicitlyDeclared: false } field => ImmutableArray.Create<(ISymbol, ITypeSymbol)>((field, field.Type)),
-            IPropertySymbol { IsImplicitlyDeclared: false } property when !IsPrimaryConstructorProperty(property) =>
-                ImmutableArray.Create<(ISymbol, ITypeSymbol)>((property, property.Type)),
-            IMethodSymbol method when ReceivesThroughParameters(method) =>
-                method.Parameters.Select(parameter => ((ISymbol)parameter, parameter.Type)).ToImmutableArray(),
-            _ => ImmutableArray<(ISymbol, ITypeSymbol)>.Empty,
-        };
-
-        private static bool ReceivesThroughParameters(IMethodSymbol method) =>
-            !method.IsImplicitlyDeclared
-            && (method.MethodKind is MethodKind.Ordinary
-                or MethodKind.Constructor
-                or MethodKind.ExplicitInterfaceImplementation
-                or MethodKind.UserDefinedOperator
-                or MethodKind.Conversion);
-
-        // record の主コンストラクタの引数から合成されるプロパティは、引数の側で 1 度だけ出す。
-        private static bool IsPrimaryConstructorProperty(IPropertySymbol property) =>
-            property.DeclaringSyntaxReferences.Any(reference => reference.GetSyntax() is ParameterSyntax);
-
-        private static bool IsSubscriber(ITypeSymbol type, ImmutableHashSet<INamedTypeSymbol> subscribers) =>
-            type is INamedTypeSymbol named
-            && (subscribers.Contains(named.OriginalDefinition)
-                || named.AllInterfaces.Any(implemented => subscribers.Contains(implemented.OriginalDefinition)));
 
         private static string DescribeDeclaration(ISymbol declaration) => declaration switch
         {

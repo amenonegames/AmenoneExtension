@@ -7,6 +7,11 @@ namespace MessagePipe
 {
     public interface IPublisher<TMessage> { void Publish(TMessage message); }
     public interface IAsyncPublisher<TMessage> {}
+    public interface IBufferedPublisher<TMessage> {}
+    public interface IBufferedAsyncPublisher<TMessage> {}
+    public interface IPublisher<TKey, TMessage> {}
+    public interface IAsyncPublisher<TKey, TMessage> {}
+    public interface IDisposablePublisher<TMessage> : IPublisher<TMessage>, System.IDisposable {}
     public interface ISubscriber<TMessage> {}
     public interface IAsyncSubscriber<TMessage> {}
     public interface IBufferedSubscriber<TMessage> {}

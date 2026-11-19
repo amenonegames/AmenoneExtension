@@ -48,7 +48,7 @@ namespace Amenone.ArchitectureGuard.Analyzers
         public static readonly DiagnosticDescriptor DiagnosticSuppression = new DiagnosticDescriptor(
             id: "AG0005",
             title: "ArchitectureGuard の診断を抑制している",
-            messageFormat: "{0} は ArchitectureGuard の診断を抑制しています。#pragma と [SuppressMessage] による抑制は認めていません。抑制をやめて、診断が指す箇所を直してください。決まりの例外にするなら、許可の属性がある AG0001〜AG0003 は [AllowUnityTime(\"理由\")] か [AllowUnityMessage(\"理由\")] を付けて理由を書き、属性の無い AG0006 と AG0007 はアセンブリ単位のルールセットで外して、理由をルールセットのコメントに書いてください。",
+            messageFormat: "{0} は ArchitectureGuard の診断を抑制しています。#pragma と [SuppressMessage] による抑制は認めていません。抑制をやめて、診断が指す箇所を直してください。決まりの例外にするなら、許可の属性がある AG0001〜AG0003 は [AllowUnityTime(\"理由\")] か [AllowUnityMessage(\"理由\")] を付けて理由を書き、属性の無い AG0006〜AG0008 はアセンブリ単位のルールセットで外して、理由をルールセットのコメントに書いてください。",
             category: Category,
             defaultSeverity: DefaultSeverity,
             isEnabledByDefault: true,
@@ -70,6 +70,14 @@ namespace Amenone.ArchitectureGuard.Analyzers
             defaultSeverity: DefaultSeverity,
             isEnabledByDefault: true);
 
+        public static readonly DiagnosticDescriptor PublishingSystemOutsidePublishSystem = new DiagnosticDescriptor(
+            id: "AG0008",
+            title: "MessagePipe で発行する System が PublishSystem<TPublisher> を継いでいない",
+            messageFormat: "System の {0} が {1} を受け取っていますが、Amenone.EcsBridge.PublishSystem<TPublisher> を継いでいません。発行する System の書き方を 1 つに揃え、注入と前回値の扱いは基底に任せます。{2}複数の種類を発行する場合は、publisher をフィールドに持つ束のクラスを作って、それを型引数にしてください。",
+            category: Category,
+            defaultSeverity: DefaultSeverity,
+            isEnabledByDefault: true);
+
         private static readonly ImmutableHashSet<string> Ids = new[]
             {
                 ScaledTimeUsage,
@@ -79,6 +87,7 @@ namespace Amenone.ArchitectureGuard.Analyzers
                 DiagnosticSuppression,
                 EntityQueryCreationInUpdate,
                 MessageSubscriberOutsidePresenter,
+                PublishingSystemOutsidePublishSystem,
             }
             .Select(descriptor => descriptor.Id)
             .ToImmutableHashSet(StringComparer.Ordinal);

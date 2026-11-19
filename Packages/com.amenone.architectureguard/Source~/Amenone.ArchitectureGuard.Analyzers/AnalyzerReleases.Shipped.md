@@ -18,3 +18,11 @@ Rule ID | Category | Severity | Notes
 --------|----------|----------|-------
 AG0006 | Amenone.ArchitectureGuard | Warning | EntityQueryCreationAnalyzer
 AG0007 | Amenone.ArchitectureGuard | Warning | MessageSubscriberAnalyzer
+
+## Release 0.3.0
+
+### New Rules
+
+Rule ID | Category | Severity | Notes
+--------|----------|----------|-------
+AG0008 | Amenone.ArchitectureGuard | Warning | PublishingSystemAnalyzer

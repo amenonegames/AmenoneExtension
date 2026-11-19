@@ -11,6 +11,7 @@ namespace Amenone.ArchitectureGuard.Analyzers
         public const string SystemBase = "Unity.Entities.SystemBase";
         public const string ISystem = "Unity.Entities.ISystem";
         public const string SystemApiQueryBuilder = "Unity.Entities.SystemAPIQueryBuilder";
+        public const string PublishSystem = "Amenone.EcsBridge.PublishSystem`1";
 
         public static readonly string[] MessagePipeSubscribers =
         {
@@ -20,6 +21,16 @@ namespace Amenone.ArchitectureGuard.Analyzers
             "MessagePipe.IBufferedAsyncSubscriber`1",
             "MessagePipe.ISubscriber`2",
             "MessagePipe.IAsyncSubscriber`2",
+        };
+
+        public static readonly string[] MessagePipePublishers =
+        {
+            "MessagePipe.IPublisher`1",
+            "MessagePipe.IAsyncPublisher`1",
+            "MessagePipe.IBufferedPublisher`1",
+            "MessagePipe.IBufferedAsyncPublisher`1",
+            "MessagePipe.IPublisher`2",
+            "MessagePipe.IAsyncPublisher`2",
         };
     }
 }

@@ -22,6 +22,7 @@
 
   <ItemGroup>
     <None Include="..\..\Runtime\*.cs" Link="RuntimeSources\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\AGENT_GUIDE.md" Link="AgentGuide\AGENT_GUIDE.md" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>
