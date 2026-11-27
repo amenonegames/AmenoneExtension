@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.3.1] - 2026-11-27
+### Changes
+- 文書だけを直した。Analyzer の規則は変えていない
+- 適用の範囲: Unity は Analyzer を、`amenone.architectureguard` を間接に参照するアセンブリ（テスト、Editor、`autoReferenced` の asmdef を通した Assembly-CSharp を含む）にも当てる。README の冒頭と入れ方、`AGENT_GUIDE.md` の 3 章の手順 5・6、9 章の末尾、10 章の表の行をこれに合わせて直した。アセンブリ丸ごと当てない時はアセンブリ単位のルールセットで `Action="None"` にし、メンバーごとの例外は許可の属性で書く、と書いた。AG0005 はルールセットでも外れないので、pragma には抑制する ID を書く（ID を書かない `#pragma warning disable` は AG0005 になる）
+- README の「確かめた事」に、適用の範囲、本物のライブラリでの AG0008、`Library/PackageCache` から写せる事を足した
+- 読み込み: `AGENTS.md` には文書を読むよう文で書く、を基本にした。`@パス` の取り込みを解くのは Claude Code の `CLAUDE.md` だけ
+- 写す口: パッケージを入れた・上げた直後は、1 度コンパイルを通してから呼ぶと書いた
+- `AGENT_GUIDE.md` の 3 章: 手順 4 に、Presenter とテストの名前の判定は大文字小文字を区別しない事を書いた。手順 5 を 2 つ（参照を足す、間接の参照で当たる）に分けた。表の View の参照に部品のアセンブリを足し、Editor の拡張の行を足した
+- `AGENT_GUIDE.md` の 10 章: 当面残す警告を、別の表（規則 / 件数 / 所 / 残す期限）にした
+
 ## [0.3.0] - 2026-11-19
 ### Changes
 - AG0008: MessagePipe の発行の interface を受け取る ECS の System（`SystemBase` の派生と `ISystem` の実装）が、`com.amenone.ecsbridge` の `PublishSystem<TPublisher>` を継いでいない。`PublishSystem<TPublisher>` が見つからないアセンブリでは何もしない。テストのアセンブリは AG0007 と同じ判定で対象外

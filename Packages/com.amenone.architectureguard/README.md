@@ -2,7 +2,7 @@
 
 Unity プロジェクトで文章として決めている設計の決まりを、Roslyn Analyzer の診断にしてコンパイル時に知らせるパッケージです。
 
-診断を出す範囲は、`amenone.architectureguard` の asmdef を参照したアセンブリだけにする設計です。Unity の文書では、asmdef のフォルダの下にある `RoslynAnalyzer` ラベル付きの DLL は、その asmdef を参照するアセンブリに適用されるとされています。このパッケージでは、この挙動を Unity の実機ではまだ確かめていません。決まりを守らせたいアセンブリの asmdef だけに参照を足してください。
+診断が出るのは、`amenone.architectureguard` の asmdef を参照したアセンブリと、そのアセンブリを直接か間接に参照するアセンブリです。Unity は、asmdef のフォルダの下にある `RoslynAnalyzer` ラベル付きの DLL を、その asmdef を参照するアセンブリに適用します。この参照は間接でも数えるので、参照を足していないアセンブリでも、参照を足したアセンブリを参照していれば診断が出ます（Unity 6000.7.0b1 のバッチモードのコンパイルで確認。後述の「確かめた事」）。決まりを守らせたいアセンブリの asmdef に参照を足し、当てたくないアセンブリは、後述の「重大度の変え方」のアセンブリ単位のルールセットで規則を `Action="None"` にしてください（AG0005 はルールセットでも外せません）。
 
 規則が対象にするライブラリ（UnityEngine、Unity.Entities、MessagePipe、com.amenone.ecsbridge）が入っていないプロジェクトやアセンブリでは、その規則は何もしません。型は名前の一致ではなくシンボルで判定するので、自前の `SystemBase` や `ISubscriber<T>`、`PublishSystem<T>` のような同じ名前の型には反応しません。
 
@@ -31,7 +31,7 @@ Unity プロジェクトで文章として決めている設計の決まりを�
    }
    ```
 
-   `amenone.architectureguard` は `autoReferenced: false` です。そのため Assembly-CSharp など、参照を足していないアセンブリには適用されません（Unity 6000.7.0b1 のバッチモードのコンパイルで確認。他のバージョンでは未確認）。
+   `amenone.architectureguard` は `autoReferenced: false` です。そのため Assembly-CSharp など、参照を足していないアセンブリには、それだけでは適用されません。ただし、参照を足したアセンブリを参照するアセンブリには適用されます。テストや Editor のアセンブリが実装のアセンブリを参照する場合も、参照を足したアセンブリの asmdef が `autoReferenced: true`（既定）で Assembly-CSharp から参照される場合も同じです（どれも Unity 6000.7.0b1 のバッチモードのコンパイルで確認。他のバージョンでは未確認）。
 
 ## 診断の一覧
 
@@ -102,7 +102,7 @@ public sealed class SceneEntryPoint : MonoBehaviour
 
 ## エージェント向けの指示の文書
 
-パッケージの直下の `AGENT_GUIDE.md` は、コードを書くエージェント（Claude Code や Codex など）に向けた設計の指示です。Analyzer の警告は違反を止めますが、新しい型をどこに置きどう組むかは教えません。この文書は、アセンブリの分け方、MVP の役割、メッセージ、DI、時間、MonoBehaviour と ECS の決まりと、各診断の直し方をまとめたものです。プロジェクトごとに決める事は 10 章の表にあり、プロジェクトの側で埋めます。
+パッケージの直下の `AGENT_GUIDE.md` は、コードを書くエージェント（Claude Code や Codex など）に向けた設計の指示です。Analyzer の警告は違反を止めますが、新しい型をどこに置きどう組むかは教えません。この文書は、アセンブリの分け方、MVP の役割、メッセージ、DI、時間、MonoBehaviour と ECS の決まりと、各診断の直し方をまとめたものです。プロジェクトごとに決める事は 10 章の 2 つの表にあり、プロジェクトの側で埋めます。
 
 git で入れたパッケージはフォルダの名前に版やハッシュが付くので、文書はプロジェクトへ写してから読み込ませます。写し先はプロジェクトの直下の `docs/architectureguard/AGENT_GUIDE.md`（`Assets` の外）です。
 
@@ -113,22 +113,24 @@ git で入れたパッケージはフォルダの名前に版やハッシュが�
   Unity -batchmode -quit -projectPath <プロジェクト> -executeMethod Amenone.ArchitectureGuard.Editor.AgentGuide.CopyToProject
   ```
 
+  パッケージを入れた・上げた直後は、Editor のアセンブリがコンパイルされて読み込まれるまで、メニューも `AgentGuide.CopyToProject` の型もありません。1 度コンパイルを通してから（コマンドラインなら、1 度 Unity でプロジェクトを開いてから）呼びます。
+
 - **Editor を使わずに写す:** `Library/PackageCache/com.amenone.architectureguard@*/AGENT_GUIDE.md`（`Packages/` に埋め込んでいる場合は `Packages/com.amenone.architectureguard/AGENT_GUIDE.md`）を `docs/architectureguard/` へコピーするだけでも構いません。
 
 メニューかメソッドで写した物には、写した版を書いた 1 行の HTML コメントが先頭に付きます。2 行目からはパッケージの文書とバイト単位で同じです（パッケージの文書に BOM が付いていれば、BOM だけは除きます）。写しは直接書き換えず、プロジェクト固有の事は `AGENTS.md` などに書きます。
 
 Editor を開くと（スクリプトを読み込むと）、写しがあれば本文をパッケージの文書と比べ、違っていれば警告を 1 回出します。1 回は Editor を起動している間で 1 回です。先頭のコメントの行がある写しはその行を除いて比べ、無い写し（手でコピーした物）は全体を比べます。比べる前に、両方から先頭の BOM を除き、改行を LF に揃えます。git の改行の設定などで BOM や改行だけが変わった写しは、古いと見なしません。写しが無いプロジェクトでは何もしません。比べるだけで、ファイルを書き換えることはありません。パッケージを上げたら、同じメニューかメソッドで写し直します。写しの中身が同じなら、ファイルは書き換えず、書き換えなかった事をログに出します。
 
-写した文書は、エージェントの指示のファイルから読み込みます。Claude Code の `CLAUDE.md` なら次の 1 行です。
-
-```
-@docs/architectureguard/AGENT_GUIDE.md
-```
-
-`AGENTS.md` には、例えば次のように書きます。その下に、文書の 10 章の表を写して埋めます。
+写した文書は、エージェントの指示のファイルから読ませます。`AGENTS.md` には、文書を読むよう文で書きます。例えば次のとおりです。その下に、文書の 10 章の 2 つの表を写して埋めます。
 
 ```markdown
 設計の決まりは `docs/architectureguard/AGENT_GUIDE.md` を読む。プロジェクト固有の事はこの下に書く。
+```
+
+`@パス` で別のファイルを取り込む書き方を解くのは、Claude Code の `CLAUDE.md` だけです。`AGENTS.md` を読む他のエージェント（Codex など）は `@パス` を取り込みとして扱わないので、`AGENTS.md` には `@パス` だけを書かないでください。`CLAUDE.md` なら、次の 1 行で取り込めます。
+
+```
+@docs/architectureguard/AGENT_GUIDE.md
 ```
 
 写す口は、Editor だけの別のアセンブリ `amenone.architectureguard.editor`（`autoReferenced: false`）にあります。Analyzer の DLL は `amenone.architectureguard` の asmdef のフォルダにあるので、Editor のアセンブリを足しても、Analyzer が適用される範囲は変わりません。
@@ -179,13 +181,14 @@ AG0005 には `NotConfigurable` を付けているので、ルールセットや
 
 - AG0001〜AG0005: Unity 6000.7.0b1 のバッチモードのコンパイルで、読み込みと警告、許可の属性、ルールセットを確かめました。
 - AG0006 と AG0007: Unity 6000.7.0b1 のバッチモードのコンパイルで、Unity.Entities と MessagePipe の代用の定義（同じ名前空間・同じアセンブリ名で、必要な型だけを書いたもの）に対して警告が出ること、Presenter のアセンブリと、このパッケージを参照しないアセンブリでは出ないことを確かめました。本物の Entities と MessagePipe を入れた Unity のプロジェクトでは確かめていません。本物を使うプロジェクトのソースには、リポジトリの外のハーネス（Roslyn でコンパイルを作って Analyzer を当てるもの）で当てて、件数を測っただけです。
-- AG0008: Unity 6000.7.0b1 のバッチモードのコンパイルで、Unity.Entities、MessagePipe、com.amenone.ecsbridge の代用の定義に対して警告が出ることを確かめました。本物の Entities、MessagePipe、com.amenone.ecsbridge を入れたプロジェクトのソースには、上と同じハーネスで当てて、`SystemBase` を直接継いで publisher を受け取る System の数と件数が合うことを確かめただけです。
+- AG0008: Unity 6000.7.0b1 のバッチモードのコンパイルで、Unity.Entities、MessagePipe、com.amenone.ecsbridge の代用の定義に対して警告が出ることを確かめました。本物の Entities、MessagePipe、com.amenone.ecsbridge を入れたプロジェクトのソースには、上と同じハーネスで当てて、`SystemBase` を直接継いで publisher を受け取る System の数と件数が合うことを確かめました。あわせて、このパッケージを入れた別のプロジェクトで、本物の Entities、MessagePipe、com.amenone.ecsbridge を入れた Unity のコンパイルで AG0008 が期待どおりの数だけ出ることを確かめました。
+- 適用の範囲: Unity 6000.7.0b1 のバッチモードのコンパイルで、`amenone.architectureguard` を参照するアセンブリ A、A だけを参照するアセンブリ B、B だけを参照するアセンブリ C を作り、B と C に AG0001 が出ること、どれも参照しないアセンブリには出ないことを確かめました。A を参照する Editor だけのアセンブリと、テストのアセンブリ（`UnityEngine.TestRunner` を参照するもの）にも AG0001 が出ました。C の asmdef を `autoReferenced: true` にすると、Assembly-CSharp にも AG0001〜AG0003 が出ました。A を参照し、`<アセンブリ名>.ruleset` で AG0001 と AG0005 を `Action="None"` にしたアセンブリでは、AG0001 は出ず、AG0005 は出ました。
 - 文書を写す口: パッケージを `Packages/` に埋め込んだプロジェクトで確かめました。Unity 6000.7.0b1 のバッチモードの `-executeMethod` で、次のことを確かめています。
   - 写しが作られ、2 行目からがパッケージの文書と同じになる。もう一度写してもファイルは書き換わらない。
   - パッケージの文書を変えると警告が 1 回出る。手で写した（先頭の行が無い）写しは、同じなら出ず、違えば出る。写しが無ければ出ず、`docs/` も作らない。
   - Editor のアセンブリには Analyzer が適用されない。
   - Unity 2022.3.62f3 でも、Editor のアセンブリがコンパイルでき、写せる。
-  - `Library/PackageCache` から入れた場合は確かめていません。
+  - git で入れた（`Library/PackageCache` にある）パッケージから写せることを、このパッケージを入れた別のプロジェクトで確かめました。
 
 ## Analyzer のビルドと DLL の更新
 

@@ -1,13 +1,15 @@
 # 設計の指示（ArchitectureGuard）
 
-`com.amenone.architectureguard` の警告は違反を止めるが、新しい型をどこに置きどう組むかは教えない。この文書はそれを補う。メニューの `Tools/Amenone/ArchitectureGuard/Copy Agent Guide To Project` でプロジェクトの `docs/architectureguard/` に写し、`AGENTS.md` / `CLAUDE.md` から読み込む。写しは直接書き換えない。プロジェクト固有の名前は、10 章の項目としてプロジェクトの `AGENTS.md` に書く。
+`com.amenone.architectureguard` の警告は違反を止めるが、新しい型をどこに置きどう組むかは教えない。この文書はそれを補う。メニューの `Tools/Amenone/ArchitectureGuard/Copy Agent Guide To Project` でプロジェクトの `docs/architectureguard/` に写す。パッケージを入れた・上げた直後は、1 度コンパイルを通してから写す。写しは直接書き換えない。プロジェクト固有の名前は、10 章の項目としてプロジェクトの `AGENTS.md` に書く。
+
+`AGENTS.md` には「設計の決まりは `docs/architectureguard/AGENT_GUIDE.md` を読む」と文で書く。`@パス` の取り込みを解くのは Claude Code の `CLAUDE.md` だけで、`AGENTS.md` を読む他のエージェント（Codex など）は解かない。
 
 決まりの末尾の `（AG0007）` は Analyzer が検査する決まり、`（検査なし）` は検査の無い決まりを表す。検査の無い決まりは、この文書を読んで守るしかない。名前の例（`MyGame.Shop` など）は作り物。
 
 ## 1. この文書の使い方
 
 - 型（クラス、interface、メッセージ、System）を足す前に 3 章を見て、置くアセンブリを決める。
-- AG の警告が出たら 9 章を見て直す。10 章の「当面残してよい警告」に挙げた物を除き、警告を残したまま作業を終えない。（検査なし）
+- AG の警告が出たら 9 章を見て直す。10 章の「当面残す警告」の表に挙げた物を除き、警告を残したまま作業を終えない。（検査なし）
 - 決まりから外れる時は、9 章の許可の方法で理由を残し、足した許可を作業の報告（PR の本文など）に一覧で書く。（検査なし）
 
 ## 2. 全体の形
@@ -15,7 +17,7 @@
 VContainer（DI）と MessagePipe（通知）で組む MVP のレイヤード構成に、必要な所だけ Unity Entities（ECS）を足す。
 
 - 抽象（interface、MessagePipe のメッセージ、外へ見せる値）と実装を別のアセンブリに分ける。（検査なし）
-- 実装のアセンブリは他の実装のアセンブリを参照しない。参照してよいのは、抽象と、値と規則だけの層。ただし合成の根（いちばん親のスコープを置くアセンブリ）だけは、親のスコープに登録する実装を参照してよい。（検査なし）
+- 実装のアセンブリは他の実装のアセンブリを参照しない。参照してよいのは、抽象と、値と規則だけの層。ただし合成の根（いちばん親のスコープを置くアセンブリ）だけは、親のスコープに登録する実装を参照してよい。Editor の拡張のアセンブリも、拡張の対象の実装を参照してよい。実行時のアセンブリは Editor のアセンブリを参照しない。（検査なし）
 - 値と規則だけの層は、参照を持たない純粋な C#（`noEngineReferences`）にする。どこからでも参照してよい。（検査なし）
 - 実装どうしをつなぐのは、各層の登録（VContainer の `LifetimeScope` / ContainerBuilder）だけ。実装のコードは相手の実装の型を知らない。（検査なし）
 - 機能のまとまりごとにこの形を繰り返す（`MyGame.Shop.Abstract`、`MyGame.Shop.Logic`、`MyGame.Shop.Presenter` …）。まとまりどうしも抽象越しにだけやり取りする。（検査なし）
@@ -30,7 +32,7 @@ VContainer（DI）と MessagePipe（通知）で組む MVP のレイヤード構
 | interface、メッセージ、外へ見せる値 | 抽象（`MyGame.Shop.Abstract`） | 値の層、他の抽象 |
 | 判断と状態 | Logic（`MyGame.Shop.Logic`） | 値の層、抽象 |
 | View の interface | View の抽象（`MyGame.Shop.ViewAbstract`） | 値の層 |
-| 表示と入力の受け取り（MonoBehaviour） | View（`MyGame.Shop.View`） | 値の層、View の抽象、メッセージの型を持つ抽象 |
+| 表示と入力の受け取り（MonoBehaviour） | View（`MyGame.Shop.View`） | 値の層、View の抽象、メッセージの型を持つ抽象、部品のアセンブリ |
 | View と Logic をつなぐ。メッセージの購読 | Presenter（`MyGame.Shop.Presenter`） | 値の層、View の抽象、抽象 |
 | 複数の View から使う表示の部品 | 部品のアセンブリ（部品だけを置き、抽象は分けない） | 値の層、UI のライブラリ |
 | いちばん親のスコープ | 合成の根（`MyGame.Root`） | 抽象、親のスコープに登録する実装（時計など） |
@@ -39,6 +41,7 @@ VContainer（DI）と MessagePipe（通知）で組む MVP のレイヤード構
 | `ISystem`、`IJobEntity` | `MyGame.Battle.Ecs.Systems` | Components、DOTS |
 | managed から ECS への書き込み | 境目（`MyGame.Battle.Bridge`） | Components、抽象、Entities、`amenone.ecsbridge` |
 | ECS から managed へ発行する System（`PublishSystem<TPublisher>` の派生）と publisher の束のクラス | 境目（`MyGame.Battle.Bridge`） | Components、メッセージの型を持つ抽象、Entities、`amenone.ecsbridge` |
+| Inspector やメニューなどの Editor の拡張（実行時のアセンブリからは参照されない） | Editor のアセンブリ（`MyGame.Shop.Editor`、Editor だけ） | 拡張の対象の実装、値の層、抽象 |
 
 他の層の登録が `SerializeField` で受け取る ScriptableObject は、受け取る側が参照できるよう抽象に置く。
 
@@ -47,9 +50,10 @@ VContainer（DI）と MessagePipe（通知）で組む MVP のレイヤード構
 1. 足す型の役割を上の表で引き、置くアセンブリを決める。
 2. 相手の層に要る interface やメッセージが無ければ、抽象の側に足す。asmdef の参照を足して層を飛び越えない。（検査なし）
 3. 既存のアセンブリに収まらない時や、参照の向きが崩れる時は、細かいアセンブリを新しく切る。新しいアセンブリにも抽象と実装を分ける決まりを当てはめる。（検査なし）
-4. Presenter のアセンブリは、名前を `.` `-` `_` で区切った 1 つを `Presenter` にする。テストのアセンブリは 1 つを `Tests` にする。AG0007 は Presenter を名前で、テストを名前か `UnityEngine.TestRunner` の参照で見分ける。AG0007 と AG0008 はテストのアセンブリを見ない。（AG0007、AG0008）
-5. 新しい asmdef には `amenone.architectureguard` の参照を足す。テスト、Editor、値だけの層は除く。足し忘れたアセンブリは何も検査されない。（検査なし）
-6. 実装を、そのアセンブリの登録の 1 か所に登録する（6 章）。層をまたぐ通知が要る時は 5 章に従う。
+4. Presenter のアセンブリは、名前を `.` `-` `_` で区切った 1 つを `Presenter` にする。テストのアセンブリは 1 つを `Tests` にする。どちらの判定も大文字小文字を区別せず、区切った 1 つが `presenter` / `presenters`、`test` / `tests` のどれでも通る。AG0007 は Presenter を名前で、テストを名前か `UnityEngine.TestRunner` の参照で見分ける。AG0007 と AG0008 はテストのアセンブリを見ない。（AG0007、AG0008）
+5. 新しい asmdef には `amenone.architectureguard` の参照を足す。テスト、Editor、値だけの層は除く。検査したいアセンブリは、間接の参照に頼らず参照を足す。（検査なし）
+6. 参照を足さないアセンブリ（テストや Editor を含む）も、参照を足したアセンブリを参照していれば規則が当たる。当てたくない時は 9 章の末尾に従う。（検査なし）
+7. 実装を、そのアセンブリの登録の 1 か所に登録する（6 章）。層をまたぐ通知が要る時は 5 章に従う。
 
 ## 4. MVP の役割分担
 
@@ -140,11 +144,13 @@ public sealed class ItemPurchasedRelay : IInitializable, IDisposable
 - **AG0007**: Presenter 以外のアセンブリでの購読の interface の受け取り。購読を Presenter に移し、反応する層の抽象の interface を呼ぶ（5 章）。
 - **AG0008**: MessagePipe の publisher を受け取る ECS の System が `Amenone.EcsBridge.PublishSystem<TPublisher>` を継いでいない。`PublishSystem<TPublisher>` を継ぎ、複数の種類は publisher の束のクラスを型引数にする（8 章）。
 
-規則が対象にするライブラリ（UnityEngine、Unity.Entities、MessagePipe、`com.amenone.ecsbridge`）が見つからないアセンブリでは、その規則は何もしない。AG0004 と AG0005 は UnityEngine の無いアセンブリ（`noEngineReferences`）でも働く。どの規則も、`amenone.architectureguard` を参照していないアセンブリでは働かない。`com.amenone.ecsbridge` が入っていないか、そのアセンブリがコンパイルの条件（Entities と VContainer が要る）で外れているプロジェクトでは、AG0008 は動かない。
+規則が対象にするライブラリ（UnityEngine、Unity.Entities、MessagePipe、`com.amenone.ecsbridge`）が見つからないアセンブリでは、その規則は何もしない。AG0004 と AG0005 は UnityEngine の無いアセンブリ（`noEngineReferences`）でも働く。`com.amenone.ecsbridge` が入っていないか、そのアセンブリがコンパイルの条件（Entities と VContainer が要る）で外れているプロジェクトでは、AG0008 は動かない。
+
+規則が当たるのは、`amenone.architectureguard` を参照するアセンブリと、それを直接か間接に参照するアセンブリ。参照を足したアセンブリを参照するテストや Editor、`autoReferenced` の asmdef を通して参照する Assembly-CSharp にも当たる。アセンブリ丸ごと当てない時は、`<アセンブリ名>.ruleset` で AG0001〜AG0004 と AG0006〜AG0008 を `Action="None"` にし、理由をコメントに書く。メンバーごとの例外は ruleset でなく許可の属性で書く（属性があるのは AG0001〜AG0003）。AG0005 は ruleset でも外れない。当てたくないアセンブリでも、ID を書かない `#pragma warning disable` は AG0005 になるので、pragma には抑制する ID を書く。`CS0618` など、このパッケージ以外の ID を書いた pragma は AG0005 にならない。直接にも間接にも参照しないアセンブリは何も検査されない。
 
 ## 10. プロジェクトの側で決める事
 
-次の項目はこの文書に無い。プロジェクトの `AGENTS.md` に、この表を写して埋める。
+次の項目はこの文書に無い。プロジェクトの `AGENTS.md` に、この章の 2 つの表を写して埋める。
 
 | 項目 | このプロジェクトでの決め |
 |---|---|
@@ -157,6 +163,11 @@ public sealed class ItemPurchasedRelay : IInitializable, IDisposable
 | 時計を進める入口（`[AllowUnityTime]` を付ける所） | |
 | managed と ECS の境目のアセンブリ | |
 | World を作り直す所と、作り直すスコープ | |
-| `amenone.architectureguard` を参照しないアセンブリと理由 | |
+| `amenone.architectureguard` の参照を足さないアセンブリと理由（間接の参照で規則が当たるかも書く） | |
 | ruleset で外した規則、そのアセンブリ、理由 | |
-| 当面残してよい警告と、残す期限 | |
+
+当面残す警告は、次の表に 1 行ずつ書く。
+
+| 規則 | 件数 | 所 | 残す期限 |
+|---|---|---|---|
+| | | | |
