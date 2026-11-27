@@ -15,9 +15,7 @@ namespace Amenone.EcsBridge
         }
 
         // System は World に残ったままスコープだけが作り直されると、同じインスタンスにもう一度注入されるので、前回値の扱いはここで決める
-        protected virtual void OnPublisherInjected()
-        {
-        }
+        protected abstract void OnPublisherInjected();
 
         protected sealed override void OnUpdate()
         {

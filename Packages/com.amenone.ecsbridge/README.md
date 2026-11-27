@@ -30,6 +30,10 @@ Package Manager の「Add package from git URL」に次を入れます。
 https://github.com/amenonegames/AmenoneExtension.git?path=/Packages/com.amenone.ecsbridge
 ```
 
+### 0.2.x から上げる時
+
+0.3.0 で `PublishSystem<TPublisher>.OnPublisherInjected()` が abstract になりました。`OnPublisherInjected()` を上書きしていなかった System はコンパイルが止まるので、空の本体で上書きし、理由を 1 行のコメントで書いてください（前回値を覚えたままにするなら下の「最初の値を発行するかどうか」の 3、前回値を持たないなら 4）。動きは 0.2.x と同じです。
+
 ## 使い方
 
 ### DefaultWorldSingleton / DefaultWorldSingletonBuffer / DefaultWorldQuery
@@ -57,12 +61,17 @@ public sealed class MoveInputSender
 
 ECS の値を読んで、変わった時だけ MVP の側へ発行する System の基底クラスです。
 `TPublisher` は `IPublisher<T>` でも `IBufferedPublisher<T>` でも構いません（この型自体は MessagePipe に依存しません）。
-VContainer が `[Inject] Construct` で publisher を渡すまでは `PublishChanges` を呼びません。
+
+- `OnUpdate` は基底が `sealed` で持ち、System の更新のたびに `PublishChanges()` を呼びます。派生が書く入口は `PublishChanges()` です
+- publisher は基底の `[Inject] Construct` が受けます。派生に `[Inject]` のメソッドもコンストラクタも要りません
+- publisher が入る前（`Publisher == null`）は、基底が `PublishChanges()` を呼びません。派生で `Publisher` の null を確かめなくて構いません
 
 ```csharp
 public partial class ScorePublishSystem : PublishSystem<IPublisher<ScoreChangedMessage>>
 {
     private readonly LastPublishedValue<int> _lastScore = new();
+
+    protected override void OnCreate() => RequireForUpdate<Score>();
 
     protected override void OnPublisherInjected() => _lastScore.Clear();
 
@@ -78,16 +87,17 @@ public partial class ScorePublishSystem : PublishSystem<IPublisher<ScoreChangedM
 builder.RegisterSystemFromDefaultWorld<ScorePublishSystem>();
 ```
 
-- `OnPublisherInjected()`: World を作り直さずに LifetimeScope だけを作り直すと、World に残った同じ System へ publisher が注入し直されます。前回値をどう扱うかはここに書きます（下の「最初の値を発行するかどうか」）
+- `OnPublisherInjected()`: abstract なので、どの System も書きます。World を作り直さずに LifetimeScope だけを作り直すと、World に残った同じ System へ publisher が注入し直されます。前回値をどう扱うかはここに書きます（下の「最初の値を発行するかどうか」）
 - `LastPublishedValue<T>`: `TryUpdate(value)` は初回と値が変わった時に true。`Clear()` で初回に戻ります。`TreatAsPublished(value)` はその値を発行済みとして扱います（発行はしない）。`TryGetPublished(out value)` で前回値を読みます。比較は `EqualityComparer<T>.Default`
 - `LastPublished<TKey, TValue>`: キーごとの前回値。`TryUpdate(key, value)`・`TreatAsPublished(key, value)`・`TryGetPublished(key, out value)`・`Clear()` は同じです。`TreatEveryKeyAsPublished(value)` は、覚えているキーを忘れ、まだ見ていないキーも含めて全部のキーがその値を発行済みとして扱います（`TryGetPublished` もまだ見ていないキーにこの値を返す）。`Clear()` はこの値も忘れます
 
 前回値の部品は使わなくても構いません。基底の `PublishSystem<TPublisher>` は前回値の持ち方を縛らないので、部品に合わない判定は System が自分のフィールドで持ってください。
+前回値を持たない System（更新のたびに発行するだけの System）も `OnPublisherInjected()` は書きます（下の「最初の値を発行するかどうか」の 4）。
 
 ### 複数の種類のメッセージを出す System
 
 publisher を名前付きのフィールドに持つ小さなクラス（publisher の束）を作り、`PublishSystem<束のクラス>` を継ぎます。
-VContainer が束を組み立てて基底の `[Inject] Construct` に渡すので、基底の「注入までは何もしない」「`OnPublisherInjected()`」はそのまま使えます。
+VContainer が束を組み立てて基底の `[Inject] Construct` に渡すので、注入までは何もしない動きは同じです。束の場合も `OnPublisherInjected()` を書きます。
 
 ```csharp
 public sealed class ScorePublishers
@@ -131,11 +141,12 @@ builder.RegisterSystemFromDefaultWorld<ScorePublishSystem>();
 ```
 
 束は System と同じスコープに登録してください。束の中の publisher は、そのスコープ（か親）で解決できる必要があります。
-例の `ComboChangedMessage` は `IBufferedPublisher<T>` で出すので、class にしてください（struct だと下の「知っておく事」の MessagePipe の注意に当たります）。
+束はコンストラクタで publisher を受けるだけのクラスなので、コンストラクタを生成するソースジェネレーター（`[AutoConstructor]` のような物）を使っていれば、それで書けます。このパッケージはそれに依存しません。
+例の `ComboChangedMessage` は `IBufferedPublisher<T>` で出します。struct でも動きますが、購読した時に、まだ発行していない `default` が届きます（下の「知っておく事」）。
 
 ### 最初の値を発行するかどうか
 
-注入の時（初めての注入と、スコープを作り直した後の注入し直し）に前回値をどう扱うかを、`OnPublisherInjected()` に 1 行で書きます。
+注入の時（初めての注入と、スコープを作り直した後の注入し直し）に前回値をどう扱うかを、`OnPublisherInjected()` に書きます。`OnPublisherInjected()` は abstract なので、どの System も次の 4 つのどれかを書きます。
 
 ```csharp
 // 1. 今の値を発行し直す: 次の更新で、今の値を必ず発行する
@@ -144,12 +155,24 @@ protected override void OnPublisherInjected() => _lastScore.Clear();
 // 2. ある値を発行済みとして扱う: 今の値がその値なら黙り、違う時だけ発行する
 protected override void OnPublisherInjected() => _lastScore.TreatAsPublished(0);
 
-// 3. 前回値を覚えたままにする: OnPublisherInjected を上書きしない（前のスコープで発行した値と同じなら黙る）
+// 3. 前回値を覚えたままにする: 何もしない（前のスコープで発行した値と同じなら黙る）
+protected override void OnPublisherInjected()
+{
+    // 購読する側がスコープをまたいで前の値を覚えているので、前回値は覚えたままにする
+}
+
+// 4. 前回値を持たない: 何もしない（更新のたびに発行する System）
+protected override void OnPublisherInjected()
+{
+    // 前回値を持たず、更新のたびに発行するだけなので、注入の時に戻す物は無い
+}
 ```
 
 - 1 は、購読する側が値を受け取るまで何も出せない時（新しいスコープの View を今の値で埋めたい時）に選びます
 - 2 は、既定の状態なら何も知らせたくない時に選びます（例: 0 点の時は「スコアが変わった」演出を出したくない）。View の最初の表示が、渡した値の表示と同じになっている時だけ使ってください。そうでないと、今の値が渡した値と同じ時に発行されず、新しい View が最初の表示のまま残ります
 - 3 は、スコープを作り直しても購読する側が前の値を覚えている時、または発行を「その時に起きた事」の知らせとして扱い、作り直した後に同じ知らせを繰り返したくない時に選びます
+  - 本体は空にし、上の例のように覚えたままにする理由を 1 行のコメントで書いてください。4 と同じ空の本体なので、コメントが無いとどちらの意図か読み分けられません
+- 4 は、前回値を持たない System の書き方です。空の本体に、前回値を持たない事を 1 行のコメントで書きます
 
 キー別の `LastPublished<TKey, TValue>` では、2 は `TreatEveryKeyAsPublished(value)` です。このメソッドは覚えたキーも全部忘れるので、どこで呼ぶかで意味が変わります。
 
@@ -208,7 +231,7 @@ Package Manager からこのパッケージの Samples を Import してくだ�
 
 ## 知っておく事
 
-- MessagePipe の `IBufferedSubscriber<T>` は、メッセージが struct だと、まだ何も発行していなくても購読した時に `default` を渡します（上の表の MessagePipe のコミットで、リポジトリの外の検証用のプロジェクトに MultiplePublishers サンプルを入れた EditMode テストで確かめた。このテストはこのリポジトリには入っていません）。`IBufferedPublisher<T>` で出すメッセージは class にしてください。束に入れた `IBufferedPublisher<T>` でも同じです
+- `IBufferedPublisher<T>` で出すメッセージは struct でも動きます。ただし MessagePipe の `IBufferedSubscriber<T>` は、メッセージが struct だと、まだ何も発行していなくても購読した時に `default` を渡します（上の表の MessagePipe のコミットで、リポジトリの外の検証用のプロジェクトに MultiplePublishers サンプルを入れた EditMode テストで確かめた。このテストはこのリポジトリには入っていません）。これが困る時は、メッセージを class にするか、受け手で `default` を見分けてください。束に入れた `IBufferedPublisher<T>` でも同じです。MultiplePublishers サンプルの `ParityChangedMessage` が class なのはこのためです
 
 ## 確かめた事・確かめていない事
 

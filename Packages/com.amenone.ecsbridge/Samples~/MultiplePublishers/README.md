@@ -9,7 +9,7 @@ Play してからの経過秒と、その秒が偶数か奇数かを画面に出
 `ElapsedSecondsPublishers` は publisher を名前付きのフィールドに持つだけのクラス（publisher の束）です。
 `ElapsedSecondsLifetimeScope` で束を `Register` すると、VContainer が束を組み立て、基底の `[Inject] Construct` に渡します。System の中では `Publisher.Seconds` と `Publisher.Parity` で使い分けます。
 `IPublisher<T>` と `IBufferedPublisher<T>` を混ぜても構いません（このサンプルでは偶奇を `IBufferedPublisher<T>` にしているので、後から購読しても今の偶奇が届きます）。
-MessagePipe の `IBufferedSubscriber<T>` は、メッセージが struct だと、まだ何も発行していなくても購読した時に `default` を渡します（上と同じ検証用のプロジェクトの EditMode テストで確かめた）。`ParityChangedMessage` を class にしているのはそのためです。
+MessagePipe の `IBufferedSubscriber<T>` は、メッセージが struct だと、まだ何も発行していなくても購読した時に `default` を渡します（下の「要る物」の検証用のプロジェクトの EditMode テストで確かめた）。`ParityChangedMessage` を class にしているのはそのためです。
 
 ## 要る物
 

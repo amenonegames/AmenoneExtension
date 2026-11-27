@@ -35,7 +35,7 @@ https://github.com/amenonegames/AmenoneExtension.git?path=/Packages/com.amenone.
 VContainer + MessagePipe の MVP の構成と、Unity Entities（ECS）をつなぐ部品です。作り直される既定の World に追従する読み書きの口と、値が変わった時だけ発行する System の基底クラス、前回値の部品が入っています。Entities と VContainer が要ります。
 
 ```
-https://github.com/amenonegames/AmenoneExtension.git?path=/Packages/com.amenone.ecsbridge#ecsbridge/0.2.0
+https://github.com/amenonegames/AmenoneExtension.git?path=/Packages/com.amenone.ecsbridge#ecsbridge/0.3.0
 ```
 
 ### com.amenone.architectureguard
@@ -43,7 +43,7 @@ https://github.com/amenonegames/AmenoneExtension.git?path=/Packages/com.amenone.
 文章で決めている設計の決まりを、Roslyn Analyzer の警告にするパッケージです。時間の取り方、Unity のメッセージ、ECS の query の作り方、MessagePipe の購読と発行の場所を見ます。想定している構成を AI のコーディングエージェントに伝える指示の文書も入っています。asmdef で参照したアセンブリだけが対象です。ブランチ `architectureguard` にあり、タグで固定して使います。
 
 ```
-https://github.com/amenonegames/AmenoneExtension.git?path=/Packages/com.amenone.architectureguard#architectureguard/0.3.0
+https://github.com/amenonegames/AmenoneExtension.git?path=/Packages/com.amenone.architectureguard#architectureguard/0.3.1
 ```
 
 ## .unitypackage で配る物
