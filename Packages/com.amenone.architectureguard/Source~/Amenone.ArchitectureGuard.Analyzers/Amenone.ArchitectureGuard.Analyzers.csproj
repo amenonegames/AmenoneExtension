@@ -8,6 +8,8 @@
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <RootNamespace>Amenone.ArchitectureGuard.Analyzers</RootNamespace>
+    <PathMap>$(MSBuildProjectDirectory)=/_/Amenone.ArchitectureGuard.Analyzers</PathMap>
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
     <UnityAnalyzerDirectory>$(MSBuildProjectDirectory)\..\..\Runtime\Analyzers\</UnityAnalyzerDirectory>
   </PropertyGroup>
 

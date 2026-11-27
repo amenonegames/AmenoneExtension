@@ -1,9 +1,10 @@
 {
   "name": "com.amenone.architectureguard",
   "displayName": "AmenoneArchitectureGuard",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "unity": "2022.3",
   "description": "Roslyn analyzers that turn written architecture rules (time access, Unity messages, EntityQuery creation in ECS system updates, MessagePipe subscriptions outside presenters, ECS systems that publish without the ecsbridge PublishSystem base) into compile-time diagnostics for assemblies that reference amenone.architectureguard directly or through other assemblies, with a design guide for coding agents that an editor menu copies into the project.",
+  "license": "MIT",
   "author": {
     "name": "amenonegames"
   }

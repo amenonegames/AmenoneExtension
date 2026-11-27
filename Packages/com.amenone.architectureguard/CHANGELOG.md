@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.3.2] - 2026-11-27
+### Changes
+- パッケージの直下に `LICENSE.md`（MIT。リポジトリの `LICENSE` と同じ文面）を足した。git の URL（`?path=`）で入れると、リポジトリの直下の `LICENSE` は届かないため。README にライセンスの節を足した
+- Analyzer の DLL をビルドし直し、DLL に埋まっていたビルド時のパス（pdb のパス）を消した。Analyzer の規則は変えていない
+- 以前の版の DLL にはビルド時のパスが含まれる
+
 ## [0.3.1] - 2026-11-27
 ### Changes
 - 文書だけを直した。Analyzer の規則は変えていない

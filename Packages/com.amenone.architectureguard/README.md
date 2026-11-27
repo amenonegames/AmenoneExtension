@@ -209,3 +209,7 @@ dotnet build -c Release
 Release でビルドすると、`Runtime/Analyzers/Amenone.ArchitectureGuard.Analyzers.dll` が上書きされます。DLL の `.meta`（`RoslynAnalyzer` ラベル、全プラットフォーム無効）はそのまま使えるので、作り直さないでください。
 
 診断を足すときは、`ArchitectureGuardDiagnostics` に記述子を足し、同じクラスの ID の集合（AG0005 が対象にする ID）にもその記述子を並べます。診断を足したときや、ID・カテゴリ・既定の重大度を変えたときは、`AnalyzerReleases.Unshipped.md` に書きます。リリースするときは、その内容を `AnalyzerReleases.Shipped.md` の新しい版の節へ移します。どちらも更新しないと、ビルドで RS2000 系の警告が出ます。
+
+## ライセンス
+
+MIT です。[LICENSE.md](LICENSE.md) を見てください。
