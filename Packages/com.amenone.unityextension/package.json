@@ -1,9 +1,10 @@
 {
   "name": "com.amenone.unityextension",
   "displayName": "AmenoneUnityExtension",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "unity": "2022.3",
   "description": "AmenoneUnityExtension",
+  "license": "MIT",
   "author": {
     "name": "amenonegames"
   }

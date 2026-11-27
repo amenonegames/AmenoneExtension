@@ -1,5 +1,9 @@
 ﻿# Changelog
 
+## [0.3.1] - 2026-11-27
+### Changes
+- Add LICENSE.md (MIT, the same text as the repository LICENSE) to the package, so that installing through the git URL with ?path= brings the license along
+
 ## [0.3.0] - 2026-11-27
 ### Breaking changes
 - PublishSystem: OnPublisherInjected() is now abstract, so every publish system states how it treats the last published values when the publisher is injected. A system that did not override it no longer compiles; override it with an empty body and a one line comment to keep the 0.2.x behavior

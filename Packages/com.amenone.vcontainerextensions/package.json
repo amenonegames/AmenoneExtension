@@ -1,9 +1,10 @@
 {
   "name": "com.amenone.vcontainerextensions",
   "displayName": "VContainerViewRegisterExtensions",
-  "version": "0.1.4",
+  "version": "0.2.0",
   "unity": "2022.3",
   "description": "A tool to help you use VContainer with Unity's new package manager.",
+  "license": "MIT",
   "author": {
     "name": "amenonegames"
   },
@@ -14,7 +15,7 @@
   {
     "displayName": "register sample",
     "description": "Contains sample lookup and resgistration code",
-    "path": "Sample"
+    "path": "Samples~/Sample"
   }
   ]
 }

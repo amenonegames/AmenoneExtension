@@ -1,0 +1,28 @@
+{
+  "name": "com.amenone.shadermodules",
+  "displayName": "Shader Modules",
+  "version": "2.0.0",
+  "unity": "2022.3",
+  "description": "HLSL include files for Unity shaders: hashes and noises (value, simplex with gradient, voronoi, curl, domain warp), easing functions, uv transforms, time helpers, 2D fractals and zellige tile patterns.",
+  "license": "MIT",
+  "author": {
+    "name": "amenonegames"
+  },
+  "samples": [
+    {
+      "displayName": "Shader Sample",
+      "description": "A URP unlit shader and a scene that switch each noise, fractal and zellige function on and off from the material. Needs URP.",
+      "path": "Samples~/ShaderSample"
+    },
+    {
+      "displayName": "Compute Particle Sample",
+      "description": "GPU particles moved by a compute shader that includes noise.cginc (random and curl_noise), drawn with Graphics.RenderMeshIndirect. Needs URP and compute shader support.",
+      "path": "Samples~/ComputeParticleSample"
+    },
+    {
+      "displayName": "Compute Shader Sample",
+      "description": "A compute shader that averages the alpha of a texture per block and shows the result on a RawImage. Does not use the include files. Needs uGUI and compute shader support.",
+      "path": "Samples~/ComputeShaderSample"
+    }
+  ]
+}
