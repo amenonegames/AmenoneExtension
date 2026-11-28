@@ -159,9 +159,10 @@ namespace Amenone.NullObjectGenerator
             }
 
             var typePath = string.Join("+", names);
-            return target.ContainingNamespace.IsGlobalNamespace
-                ? $"{typePath}.{GeneratedTypeSuffix}.g.cs"
-                : $"{target.ContainingNamespace.ToDisplayString()}.{typePath}.{GeneratedTypeSuffix}.g.cs";
+            var fullName = target.ContainingNamespace.IsGlobalNamespace ? typePath : $"{target.ContainingNamespace.ToDisplayString()}.{typePath}";
+
+            // Hint names must be unique ignoring case, while 'IFoo' and 'Ifoo' are different types.
+            return $"{fullName}.{GeneratedTypeSuffix}.{StableHash.Of(fullName)}.g.cs";
         }
 
         private static NullObjLog ReadLog(AttributeData? attribute) =>

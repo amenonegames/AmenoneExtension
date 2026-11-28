@@ -1,9 +1,9 @@
 {
   "name": "com.amenone.shadermodules",
   "displayName": "Shader Modules",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "unity": "2022.3",
-  "description": "HLSL include files for Unity shaders: hashes and noises (value, simplex with gradient, voronoi, curl, domain warp), easing functions, uv transforms, time helpers, 2D fractals and zellige tile patterns.",
+  "description": "HLSL include files for Unity shaders: hashes and noises (value, simplex with gradient, voronoi, curl, domain warp), easing functions, uv transforms, time helpers, 2D fractals, zellige tile patterns, and blur helpers that let bilinear filtering average texels (downsample, upsample, separable gaussian).",
   "license": "MIT",
   "author": {
     "name": "amenonegames"
@@ -23,6 +23,11 @@
       "displayName": "Compute Shader Sample",
       "description": "A compute shader that averages the alpha of a texture per block and shows the result on a RawImage. Does not use the include files. Needs uGUI and compute shader support.",
       "path": "Samples~/ComputeShaderSample"
+    },
+    {
+      "displayName": "Blur Sample",
+      "description": "A URP Renderer Feature (RenderGraph) that blurs the whole camera color by halving it with blur_downsample_center5 a set number of times and enlarging it back with blur_upsample. Needs Unity 6 and URP.",
+      "path": "Samples~/BlurSample"
     }
   ]
 }

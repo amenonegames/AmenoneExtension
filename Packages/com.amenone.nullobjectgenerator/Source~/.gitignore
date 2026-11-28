@@ -1,2 +1,5 @@
 bin/
 obj/
+# The repository root ignores Unity-generated project files; these are the generator sources.
+!*.csproj
+!*.sln

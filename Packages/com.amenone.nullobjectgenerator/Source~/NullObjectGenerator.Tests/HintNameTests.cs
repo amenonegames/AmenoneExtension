@@ -57,6 +57,42 @@ public interface IFoo { void Run(); }";
         }
 
         [Fact]
+        public void Generate_TypesDifferingOnlyInCase_ShouldGenerateBothWithHintNamesUniqueIgnoringCase()
+        {
+            const string source = @"
+using NullObjectGenerator;
+
+namespace Sample
+{
+    [InterfaceToNullObj]
+    public interface IFoo { void Run(); }
+
+    [InterfaceToNullObj]
+    public interface Ifoo { void Stop(); }
+}
+
+namespace Game.UI
+{
+    [InterfaceToNullObj]
+    public interface IView { void Show(); }
+}
+
+namespace Game.Ui
+{
+    [InterfaceToNullObj]
+    public interface IView { void Hide(); }
+}";
+            var result = GeneratorRunner.Run(source).AssertCompilesCleanly();
+
+            var raw = result.RawHintNames.ToArray();
+            Assert.Equal(raw.Length, raw.Distinct(System.StringComparer.OrdinalIgnoreCase).Count());
+            Assert.Contains("Sample.IFoo.AsNullObj.0b591636.g.cs", raw);
+            Assert.Contains("Sample.Ifoo.AsNullObj.6de3add6.g.cs", raw);
+            Assert.Contains("Game.UI.IView.AsNullObj.g.cs", result.HintNames);
+            Assert.Contains("Game.Ui.IView.AsNullObj.g.cs", result.HintNames);
+        }
+
+        [Fact]
         public void Generate_AttributeOnSeveralPartialDeclarations_ShouldGenerateOnce()
         {
             const string source = @"

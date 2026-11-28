@@ -1,7 +1,7 @@
 {
   "name": "com.amenone.nullobjectgenerator",
   "displayName": "Amenone Null Object Generator",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "unity": "6000.0",
   "description": "A Roslyn source generator that writes a do-nothing implementation (null object) of an interface marked [InterfaceToNullObj], or of every interface of a class marked [InheritsToNullObj], into the same assembly, optionally logging or throwing when a member is used. It runs for every assembly in the project.",
   "license": "MIT",

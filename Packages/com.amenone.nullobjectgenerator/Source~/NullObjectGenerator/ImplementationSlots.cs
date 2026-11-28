@@ -19,10 +19,14 @@ namespace Amenone.NullObjectGenerator
             "ReferenceEquals`0(object,object)",
         };
 
-        private readonly HashSet<string> _nonMethodNames = new HashSet<string>();
+        // The generated indexers carry no IndexerName attribute, so they always take these names (CS0102 / CS0082).
+        private static readonly string[] IndexerNames = { "Item", "get_Item", "set_Item" };
+
         private readonly HashSet<string> _methodNames = new HashSet<string> { "ToString", "GetHashCode", "GetType", "Finalize", "MemberwiseClone", "Equals", "ReferenceEquals" };
         private readonly HashSet<string> _methodSignatures = new HashSet<string>(ObjectMethodSignatures);
+        private readonly HashSet<string> _nonMethodNames = new HashSet<string>();
         private readonly HashSet<string> _indexerSignatures = new HashSet<string>();
+        private bool _hasIndexer;
 
         public ImplementationSlots(string generatedTypeName) => _nonMethodNames.Add(generatedTypeName);
 
@@ -30,13 +34,14 @@ namespace Amenone.NullObjectGenerator
             member switch
             {
                 IMethodSymbol method => TryClaimMethod(method),
-                IPropertySymbol { IsIndexer: true } indexer => _indexerSignatures.Add(ParameterKey(indexer.Parameters)),
-                _ => TryClaimName(member.Name),
+                IPropertySymbol { IsIndexer: true } indexer => TryClaimIndexer(indexer),
+                IPropertySymbol property => TryClaimNames(PropertyNames(property)),
+                _ => TryClaimNames(new[] { member.Name, "add_" + member.Name, "remove_" + member.Name }),
             };
 
         private bool TryClaimMethod(IMethodSymbol method)
         {
-            if (_nonMethodNames.Contains(method.Name))
+            if (_nonMethodNames.Contains(method.Name) || (_hasIndexer && IndexerNames.Contains(method.Name)))
             {
                 return false;
             }
@@ -51,8 +56,48 @@ namespace Amenone.NullObjectGenerator
             return true;
         }
 
-        private bool TryClaimName(string name) =>
-            !_methodNames.Contains(name) && _nonMethodNames.Add(name);
+        private bool TryClaimIndexer(IPropertySymbol indexer)
+        {
+            if (!_hasIndexer && IndexerNames.Any(name => _methodNames.Contains(name) || _nonMethodNames.Contains(name)))
+            {
+                return false;
+            }
+
+            if (!_indexerSignatures.Add(ParameterKey(indexer.Parameters)))
+            {
+                return false;
+            }
+
+            _hasIndexer = true;
+            return true;
+        }
+
+        private bool TryClaimNames(IReadOnlyCollection<string> names)
+        {
+            if (names.Any(name => _methodNames.Contains(name) || _nonMethodNames.Contains(name) || (_hasIndexer && IndexerNames.Contains(name))))
+            {
+                return false;
+            }
+
+            _nonMethodNames.UnionWith(names);
+            return true;
+        }
+
+        private static IReadOnlyCollection<string> PropertyNames(IPropertySymbol property)
+        {
+            var names = new List<string> { property.Name };
+            if (property.GetMethod != null)
+            {
+                names.Add("get_" + property.Name);
+            }
+
+            if (property.SetMethod != null)
+            {
+                names.Add("set_" + property.Name);
+            }
+
+            return names;
+        }
 
         private static string ParameterKey(IEnumerable<IParameterSymbol> parameters) =>
             string.Join(",", parameters.Select(parameter =>

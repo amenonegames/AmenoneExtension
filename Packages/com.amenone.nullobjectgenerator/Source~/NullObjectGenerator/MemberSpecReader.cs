@@ -58,7 +58,7 @@ namespace Amenone.NullObjectGenerator
         private bool CanBeImplicit(INamedTypeSymbol owner, ISymbol member) =>
             member.DeclaredAccessibility == Accessibility.Public
             && (!_generatedTypeIsPublic || (TypeNames.IsEffectivelyPublic(owner) && HasPublicSignature(member)))
-            && (member is not IMethodSymbol method || method.TypeParameters.SelectMany(parameter => parameter.ConstraintTypes).All(TypeNames.CanBeConstraint));
+            && (member is not IMethodSymbol method || method.TypeParameters.All(TypeNames.CanWriteConstraints));
 
         private static bool HasPublicSignature(ISymbol member) =>
             member switch

@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Linq;
+using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
@@ -59,12 +60,14 @@ namespace Amenone.NullObjectGenerator
             string targetsStep,
             string outputsStep)
         {
+            // Narrowing the key set to one flag per type keeps a changed set from re-running unrelated outputs.
             var outputs = reads
                 .Select(static (read, _) => read!.Target)
                 .WithTrackingName(targetsStep)
                 .Combine(collidingKeys)
+                .Select(static (pair, _) => (Target: pair.Left, IsColliding: pair.Left.Spec is { } spec && pair.Right.Contains(spec.Key)))
                 .WithTrackingName(outputsStep);
-            context.RegisterSourceOutput(outputs, static (output, pair) => NullObjectEmitter.Emit(output, pair.Left, pair.Right));
+            context.RegisterSourceOutput(outputs, static (output, pair) => NullObjectEmitter.Emit(output, pair.Target, pair.IsColliding));
         }
     }
 }

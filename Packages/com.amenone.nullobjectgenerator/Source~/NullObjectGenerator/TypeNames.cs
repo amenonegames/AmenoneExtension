@@ -50,7 +50,7 @@ namespace Amenone.NullObjectGenerator
                 IPointerTypeSymbol pointer => IsEffectivelyPublic(pointer.PointedAtType),
                 IFunctionPointerTypeSymbol function => IsEffectivelyPublic(function.Signature),
                 INamedTypeSymbol { IsTupleType: true } tuple => tuple.TupleElements.All(element => IsEffectivelyPublic(element.Type)),
-                INamedTypeSymbol named => IsDeclaredPublic(named) && named.TypeArguments.All(IsEffectivelyPublic),
+                INamedTypeSymbol named => IsPublicAlongContainingTypes(named),
                 _ => true,
             };
 
@@ -59,16 +59,11 @@ namespace Amenone.NullObjectGenerator
             && signature.Parameters.All(parameter => IsEffectivelyPublic(parameter.Type))
             && signature.TypeParameters.SelectMany(parameter => parameter.ConstraintTypes).All(IsEffectivelyPublic);
 
-        // CS0701 / CS0702: after substituting a type argument, a constraint can become a type that C# does not accept as a constraint.
-        public static bool CanBeConstraint(ITypeSymbol type) =>
-            type switch
-            {
-                ITypeParameterSymbol => true,
-                INamedTypeSymbol { TypeKind: TypeKind.Interface } => true,
-                INamedTypeSymbol { TypeKind: TypeKind.Class, IsSealed: false, IsStatic: false } named =>
-                    named.SpecialType is not (SpecialType.System_Object or SpecialType.System_ValueType or SpecialType.System_Array),
-                _ => false,
-            };
+        // After a type argument is substituted, the constraints may no longer be writable:
+        // CS0701 / CS0702 for sealed classes, value types and arrays, CS0450 for a class next to class / struct / unmanaged.
+        public static bool CanWriteConstraints(ITypeParameterSymbol parameter) =>
+            parameter.ConstraintTypes.All(CanBeConstraint)
+            && !(HasPrimaryConstraintKeyword(parameter) && parameter.ConstraintTypes.Any(type => type.TypeKind == TypeKind.Class));
 
         public static string SignatureKey(ITypeSymbol type) =>
             type switch
@@ -83,11 +78,24 @@ namespace Amenone.NullObjectGenerator
                 _ => Of(type),
             };
 
-        private static bool IsDeclaredPublic(INamedTypeSymbol type)
+        private static bool HasPrimaryConstraintKeyword(ITypeParameterSymbol parameter) =>
+            parameter.HasReferenceTypeConstraint || parameter.HasValueTypeConstraint || parameter.HasUnmanagedTypeConstraint;
+
+        private static bool CanBeConstraint(ITypeSymbol type) =>
+            type switch
+            {
+                ITypeParameterSymbol => true,
+                INamedTypeSymbol { TypeKind: TypeKind.Interface } => true,
+                INamedTypeSymbol { TypeKind: TypeKind.Class, IsSealed: false, IsStatic: false } named =>
+                    named.SpecialType is not (SpecialType.System_Object or SpecialType.System_ValueType or SpecialType.System_Array),
+                _ => false,
+            };
+
+        private static bool IsPublicAlongContainingTypes(INamedTypeSymbol type)
         {
             for (var current = type; current != null; current = current.ContainingType)
             {
-                if (current.DeclaredAccessibility != Accessibility.Public)
+                if (current.DeclaredAccessibility != Accessibility.Public || !current.TypeArguments.All(IsEffectivelyPublic))
                 {
                     return false;
                 }

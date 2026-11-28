@@ -241,6 +241,157 @@ namespace Sample
         }
 
         [Fact]
+        public void Generate_InternalTypeArgumentOfContainingType_ShouldImplementExplicitly()
+        {
+            const string source = @"
+using NullObjectGenerator;
+
+namespace Sample
+{
+    internal class Secret { }
+
+    public class Box<T>
+    {
+        public interface IIn
+        {
+            void Put(IIn other);
+            IIn Self { get; }
+        }
+    }
+
+    [InheritsToNullObj]
+    public class Holder : Box<Secret>.IIn
+    {
+        void Box<Secret>.IIn.Put(Box<Secret>.IIn other) { }
+        Box<Secret>.IIn Box<Secret>.IIn.Self => null;
+    }
+}";
+            var result = GeneratorRunner.Run(source).AssertCompilesCleanly();
+
+            Assert.Contains("void global::Sample.Box<global::Sample.Secret>.IIn.Put(", result.Source("Sample.Holder.AsNullObj.g.cs"));
+        }
+
+        [Fact]
+        public void Generate_AccessorAndIndexerNamesFromOtherInterfaces_ShouldImplementTheLaterOnesExplicitly()
+        {
+            const string source = @"
+using NullObjectGenerator;
+
+namespace Sample
+{
+    public interface IItem { int Item { get; } }
+    public interface IIndexed { int this[int index] { get; } }
+    public interface IValue { int Value { get; set; } }
+    public interface IAccessors { int get_Value(); void set_Value(int value); }
+    public interface IChanged { event System.Action Changed; }
+    public interface IChangedMethods { void add_Changed(System.Action handler); }
+    public interface IItemMethods { int get_Item(int index); }
+
+    [InterfaceToNullObj]
+    public interface IAll : IItem, IIndexed, IValue, IAccessors, IChanged, IChangedMethods { }
+
+    [InterfaceToNullObj]
+    public interface IIndexerFirst : IIndexed, IItem, IItemMethods { }
+}";
+            var result = GeneratorRunner.Run(source).AssertCompilesCleanly();
+
+            var all = result.Source("Sample.IAll.AsNullObj.g.cs");
+            Assert.Contains("public int Item", all);
+            Assert.Contains("int global::Sample.IIndexed.this[int index]", all);
+            Assert.Contains("public int Value", all);
+            Assert.Contains("int global::Sample.IAccessors.get_Value()", all);
+            Assert.Contains("void global::Sample.IChangedMethods.add_Changed(", all);
+            var indexerFirst = result.Source("Sample.IIndexerFirst.AsNullObj.g.cs");
+            Assert.Contains("public int this[int index]", indexerFirst);
+            Assert.Contains("int global::Sample.IItem.Item", indexerFirst);
+            Assert.Contains("int global::Sample.IItemMethods.get_Item(int index)", indexerFirst);
+        }
+
+        [Fact]
+        public void Generate_ClassConstraintNextToSubstitutedClass_ShouldImplementExplicitly()
+        {
+            const string source = @"
+using NullObjectGenerator;
+
+namespace Sample
+{
+    public interface IConvert<T>
+    {
+        U As<U>(T value) where U : class, T;
+        V Make<V>() where V : T, new();
+    }
+
+    [InterfaceToNullObj]
+    public interface IErrors : IConvert<System.Exception> { }
+}";
+            var result = GeneratorRunner.Run(source).AssertCompilesCleanly();
+
+            var generated = result.Source("Sample.IErrors.AsNullObj.g.cs");
+            Assert.Contains("U global::Sample.IConvert<global::System.Exception>.As<U>(global::System.Exception value)", generated);
+            Assert.Contains("public V Make<V>()", generated);
+        }
+
+        [Fact]
+        public void Generate_ObsoleteInterfaceAndTypes_ShouldNotWarnInGeneratedCode()
+        {
+            const string source = @"
+using System;
+using NullObjectGenerator;
+
+namespace Sample
+{
+    [Obsolete]
+    public class Old { }
+
+    [Obsolete(""use something else"")]
+    public interface IOld
+    {
+        Old Get();
+    }
+
+#pragma warning disable CS0612, CS0618
+    [InterfaceToNullObj]
+    public interface IUsesOld : IOld
+    {
+        void Put(Old value);
+    }
+
+    [InheritsToNullObj]
+    public class OldUser : IOld
+    {
+        public Old Get() => null;
+    }
+#pragma warning restore CS0612, CS0618
+}";
+            GeneratorRunner.Run(source).AssertCompilesCleanly();
+        }
+
+        [Fact]
+        public void Generate_WithDocumentationDiagnostics_ShouldNotWarnCs1591InGeneratedCode()
+        {
+            const string source = @"
+using NullObjectGenerator;
+
+namespace Sample
+{
+    /// <summary>Runs.</summary>
+    [InterfaceToNullObj]
+    public interface IRun
+    {
+        /// <summary>Runs once.</summary>
+        void Run();
+    }
+
+    public class Undocumented { }
+}";
+            var parseOptions = GeneratorRunner.ParseOptions.WithDocumentationMode(Microsoft.CodeAnalysis.DocumentationMode.Diagnose);
+            var result = GeneratorRunner.Run(new[] { source }, GeneratorRunner.DefaultAssemblyName, new LibraryStub[0], parseOptions).AssertCompilesCleanly();
+
+            Assert.Contains(result.Output.GetDiagnostics(), diagnostic => diagnostic.Id == "CS1591" && diagnostic.Location.SourceTree!.FilePath == "Source0.cs");
+            Assert.Contains("Sample.IRun.AsNullObj.g.cs", result.HintNames);
+        }
+
+        [Fact]
         public void Generate_PartialInterfaceInSeveralFiles_ShouldImplementMembersOfEveryPart()
         {
             const string attributed = @"

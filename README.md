@@ -35,15 +35,15 @@ https://github.com/amenonegames/AmenoneExtension.git?path=/Packages/com.amenone.
 interface やクラスに属性を書くと、何もしない実装（Null Object）を生成する Source Generator です。生成先は属性を書いた型と同じアセンブリで、asmdef の参照は増えません。Unity 6 以降が対象です。依存はありません。
 
 ```
-https://github.com/amenonegames/AmenoneExtension.git?path=/Packages/com.amenone.nullobjectgenerator#nullobjectgenerator/2.0.0
+https://github.com/amenonegames/AmenoneExtension.git?path=/Packages/com.amenone.nullobjectgenerator#nullobjectgenerator/2.0.1
 ```
 
 ### com.amenone.shadermodules
 
-シェーダーから include して使う関数集（cginc）です。ノイズ、フラクタル、イージング、座標の変換、時間、ゼリージュ模様が入っています。依存はありません。サンプルは URP が要ります。
+シェーダーから include して使う関数集（cginc）です。ノイズ、フラクタル、イージング、座標の変換、時間、ゼリージュ模様、バイリニアを使ったブラーが入っています。依存はありません。サンプルは URP が要ります。
 
 ```
-https://github.com/amenonegames/AmenoneExtension.git?path=/Packages/com.amenone.shadermodules#shadermodules/2.0.0
+https://github.com/amenonegames/AmenoneExtension.git?path=/Packages/com.amenone.shadermodules#shadermodules/2.1.0
 ```
 
 ### com.amenone.ecsbridge

@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
@@ -46,6 +47,30 @@ namespace Sample
     }
 }";
 
+        private const string FirstDuplicate = @"
+using NullObjectGenerator;
+
+namespace Sample
+{
+    public class First
+    {
+        [InterfaceToNullObj]
+        public interface IDup { void Run(); }
+    }
+}";
+
+        private const string SecondDuplicate = @"
+using NullObjectGenerator;
+
+namespace Sample
+{
+    public class Second
+    {
+        [InterfaceToNullObj]
+        public interface IDup { void Stop(); }
+    }
+}";
+
         [Fact]
         public void Rerun_EditingOneInterface_ShouldLeaveOtherTypesCached()
         {
@@ -56,8 +81,8 @@ namespace Sample
             AssertReused(TargetReason(second, NullObjectSourceGenerator.ClassTargetsStep, "BazAsNullObj"));
             Assert.Equal(1, ModifiedSourceOutputs(second));
             Assert.Equal(
-                first.GeneratedSources.Single(source => source.HintName == "Sample.IBar.AsNullObj.g.cs").SourceText.ToString(),
-                second.GeneratedSources.Single(source => source.HintName == "Sample.IBar.AsNullObj.g.cs").SourceText.ToString());
+                first.GeneratedSources.Single(source => GeneratorResult.WithoutHash(source.HintName) == "Sample.IBar.AsNullObj.g.cs").SourceText.ToString(),
+                second.GeneratedSources.Single(source => GeneratorResult.WithoutHash(source.HintName) == "Sample.IBar.AsNullObj.g.cs").SourceText.ToString());
         }
 
         [Fact]
@@ -79,6 +104,32 @@ namespace Sample
             AssertEverythingReused(second);
         }
 
+        [Fact]
+        public void Rerun_RemovingOneOfCollidingTypes_ShouldLeaveUnrelatedOutputsCached()
+        {
+            var (first, second) = RunTwice(
+                new[] { FooSource, BarSource, UnrelatedSource, FirstDuplicate, SecondDuplicate },
+                new[] { FooSource, BarSource, UnrelatedSource, FirstDuplicate });
+
+            Assert.Equal(new[] { "NOG004", "NOG004" }, first.Diagnostics.Select(diagnostic => diagnostic.Id).ToArray());
+            AssertUnrelatedOutputsReused(second);
+            Assert.Empty(second.Diagnostics);
+            Assert.Contains(second.GeneratedSources, source => GeneratorResult.WithoutHash(source.HintName) == "Sample.First+IDup.AsNullObj.g.cs");
+        }
+
+        [Fact]
+        public void Rerun_AddingCollidingType_ShouldLeaveUnrelatedOutputsCached()
+        {
+            var (first, second) = RunTwice(
+                new[] { FooSource, BarSource, UnrelatedSource, FirstDuplicate },
+                new[] { FooSource, BarSource, UnrelatedSource, FirstDuplicate, SecondDuplicate });
+
+            Assert.Contains(first.GeneratedSources, source => GeneratorResult.WithoutHash(source.HintName) == "Sample.First+IDup.AsNullObj.g.cs");
+            AssertUnrelatedOutputsReused(second);
+            Assert.Equal(new[] { "NOG004", "NOG004" }, second.Diagnostics.Select(diagnostic => diagnostic.Id).ToArray());
+            Assert.DoesNotContain(second.GeneratedSources, source => source.HintName.Contains("IDup"));
+        }
+
         private static void AssertEverythingReused(GeneratorRunResult result)
         {
             AssertReused(TargetReason(result, NullObjectSourceGenerator.InterfaceTargetsStep, "IFooAsNullObj"));
@@ -88,10 +139,13 @@ namespace Sample
             Assert.Equal(0, ModifiedSourceOutputs(result));
         }
 
-        private static (GeneratorRunResult First, GeneratorRunResult Second) RunTwice(string editedFoo, string editedBar, string editedUnrelated)
+        private static (GeneratorRunResult First, GeneratorRunResult Second) RunTwice(string editedFoo, string editedBar, string editedUnrelated) =>
+            RunTwice(new[] { FooSource, BarSource, UnrelatedSource }, new[] { editedFoo, editedBar, editedUnrelated });
+
+        private static (GeneratorRunResult First, GeneratorRunResult Second) RunTwice(string[] before, string[] after)
         {
             var compilation = GeneratorRunner.CreateCompilation(
-                new[] { FooSource, BarSource, UnrelatedSource },
+                before,
                 GeneratorRunner.DefaultAssemblyName,
                 new[] { LibraryStub.UnityEngine.Reference },
                 GeneratorRunner.ParseOptions);
@@ -100,12 +154,34 @@ namespace Sample
             var first = driver.GetRunResult().Results.Single();
 
             var trees = compilation.SyntaxTrees.ToArray();
-            var edited = compilation
-                .ReplaceSyntaxTree(trees[0], trees[0].WithChangedText(SourceText.From(editedFoo)))
-                .ReplaceSyntaxTree(trees[1], trees[1].WithChangedText(SourceText.From(editedBar)))
-                .ReplaceSyntaxTree(trees[2], trees[2].WithChangedText(SourceText.From(editedUnrelated)));
+            Compilation edited = compilation;
+            for (var i = 0; i < Math.Min(before.Length, after.Length); i++)
+            {
+                if (before[i] != after[i])
+                {
+                    edited = edited.ReplaceSyntaxTree(trees[i], trees[i].WithChangedText(SourceText.From(after[i])));
+                }
+            }
+
+            edited = edited
+                .RemoveSyntaxTrees(trees.Skip(after.Length))
+                .AddSyntaxTrees(after.Skip(before.Length).Select((text, index) =>
+                    CSharpSyntaxTree.ParseText(text, GeneratorRunner.ParseOptions, $"Added{index}.cs")));
             driver = driver.RunGenerators(edited);
             return (first, driver.GetRunResult().Results.Single());
+        }
+
+        private static IncrementalStepRunReason OutputReason(GeneratorRunResult result, string stepName, string typeName) =>
+            result.TrackedSteps[stepName]
+                .SelectMany(step => step.Outputs)
+                .Single(output => output.Value is ValueTuple<NullObjectTarget, bool> { Item1.Spec.TypeName: var name } && name == typeName)
+                .Reason;
+
+        private static void AssertUnrelatedOutputsReused(GeneratorRunResult result)
+        {
+            AssertReused(OutputReason(result, NullObjectSourceGenerator.InterfaceOutputsStep, "IFooAsNullObj"));
+            AssertReused(OutputReason(result, NullObjectSourceGenerator.InterfaceOutputsStep, "IBarAsNullObj"));
+            AssertReused(OutputReason(result, NullObjectSourceGenerator.ClassOutputsStep, "BazAsNullObj"));
         }
 
         private static IncrementalStepRunReason TargetReason(GeneratorRunResult result, string stepName, string typeName) =>

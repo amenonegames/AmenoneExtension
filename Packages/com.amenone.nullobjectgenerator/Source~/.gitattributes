@@ -1,0 +1,2 @@
+# Checkouts with core.autocrlf would turn these into CRLF, which changes the built DLL and the generated attribute text.
+* text=auto eol=lf
